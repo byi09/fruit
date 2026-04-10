@@ -36,21 +36,15 @@ export default function App() {
     requestRematch,
   } = useGame(setScreen);
 
-  // Connection indicator
-  const connectionBadge = (
+  // Only show connection badge when disconnected
+  const connectionBadge = !isConnected ? (
     <div className="fixed top-3 right-3 z-40">
-      <div
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-          isConnected
-            ? 'bg-emerald-100 text-emerald-700'
-            : 'bg-red-100 text-red-700 animate-pulse'
-        }`}
-      >
-        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} />
-        {isConnected ? 'Connected' : 'Reconnecting...'}
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 text-red-700 animate-pulse">
+        <div className="w-2 h-2 rounded-full bg-red-500" />
+        Reconnecting...
       </div>
     </div>
-  );
+  ) : null;
 
   if (screen === 'home') {
     return (

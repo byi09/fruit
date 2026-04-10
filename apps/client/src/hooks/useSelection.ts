@@ -1,104 +1,113 @@
 import { useState, useCallback, useRef, type RefObject } from 'react';
-import { type Move, type Board, getRectangleSum, normalizeMove } from '@fruitbox/shared';
+import type { Move, Board } from '@fruitbox/shared';
 
-interface CellPosition {
-  row: number;
-  col: number;
+interface PixelRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 interface SelectionState {
-  start: CellPosition | null;
-  end: CellPosition | null;
   isDragging: boolean;
-  sumInfo: { sum: number; count: number } | null;
+  rect: PixelRect | null;
 }
 
 export function useSelection(
   board: Board | null,
-  targetSum: number,
+  _targetSum: number,
   onCommit: (move: Move) => boolean,
   gridRef: RefObject<HTMLDivElement | null>,
 ) {
   const [selection, setSelection] = useState<SelectionState>({
-    start: null,
-    end: null,
     isDragging: false,
-    sumInfo: null,
+    rect: null,
   });
-  const startRef = useRef<CellPosition | null>(null);
+  const startPoint = useRef<{ x: number; y: number } | null>(null);
 
-  const getCellFromPoint = useCallback(
-    (clientX: number, clientY: number): CellPosition | null => {
+  const getRelativePoint = useCallback(
+    (clientX: number, clientY: number): { x: number; y: number } | null => {
+      if (!gridRef.current) return null;
+      const gridRect = gridRef.current.getBoundingClientRect();
+      return {
+        x: Math.max(0, Math.min(clientX - gridRect.left, gridRect.width)),
+        y: Math.max(0, Math.min(clientY - gridRect.top, gridRect.height)),
+      };
+    },
+    [gridRef],
+  );
+
+  const getCellsInRect = useCallback(
+    (rect: PixelRect): Move | null => {
       if (!gridRef.current || !board) return null;
-      const grid = gridRef.current;
-      const rect = grid.getBoundingClientRect();
+      const gridEl = gridRef.current;
+      const gridRect = gridEl.getBoundingClientRect();
       const rows = board.length;
       const cols = board[0].length;
-      const cellW = rect.width / cols;
-      const cellH = rect.height / rows;
+      const cellW = gridRect.width / cols;
+      const cellH = gridRect.height / rows;
 
-      const col = Math.floor((clientX - rect.left) / cellW);
-      const row = Math.floor((clientY - rect.top) / cellH);
+      // Find which cells are inside the drawn rectangle
+      const startCol = Math.floor(rect.x / cellW);
+      const startRow = Math.floor(rect.y / cellH);
+      const endCol = Math.floor((rect.x + rect.width - 1) / cellW);
+      const endRow = Math.floor((rect.y + rect.height - 1) / cellH);
 
-      if (row < 0 || row >= rows || col < 0 || col >= cols) return null;
-      return { row, col };
+      const clampedStartRow = Math.max(0, Math.min(startRow, rows - 1));
+      const clampedStartCol = Math.max(0, Math.min(startCol, cols - 1));
+      const clampedEndRow = Math.max(0, Math.min(endRow, rows - 1));
+      const clampedEndCol = Math.max(0, Math.min(endCol, cols - 1));
+
+      return {
+        startRow: clampedStartRow,
+        startCol: clampedStartCol,
+        endRow: clampedEndRow,
+        endCol: clampedEndCol,
+      };
     },
     [board, gridRef],
   );
 
-  const updateSumInfo = useCallback(
-    (start: CellPosition, end: CellPosition) => {
-      if (!board) return null;
-      const move = normalizeMove({
-        startRow: start.row,
-        startCol: start.col,
-        endRow: end.row,
-        endCol: end.col,
-      });
-      return getRectangleSum(board, move);
-    },
-    [board],
-  );
-
   const handlePointerDown = useCallback(
     (clientX: number, clientY: number) => {
-      const pos = getCellFromPoint(clientX, clientY);
-      if (!pos) return;
-      startRef.current = pos;
-      const sumInfo = updateSumInfo(pos, pos);
-      setSelection({ start: pos, end: pos, isDragging: true, sumInfo });
+      const pt = getRelativePoint(clientX, clientY);
+      if (!pt) return;
+      startPoint.current = pt;
+      setSelection({ isDragging: true, rect: { x: pt.x, y: pt.y, width: 0, height: 0 } });
     },
-    [getCellFromPoint, updateSumInfo],
+    [getRelativePoint],
   );
 
   const handlePointerMove = useCallback(
     (clientX: number, clientY: number) => {
-      if (!startRef.current) return;
-      const pos = getCellFromPoint(clientX, clientY);
-      if (!pos) return;
-      const sumInfo = updateSumInfo(startRef.current, pos);
-      setSelection((prev) => ({ ...prev, end: pos, sumInfo }));
+      if (!startPoint.current) return;
+      const pt = getRelativePoint(clientX, clientY);
+      if (!pt) return;
+
+      const sp = startPoint.current;
+      const x = Math.min(sp.x, pt.x);
+      const y = Math.min(sp.y, pt.y);
+      const width = Math.abs(pt.x - sp.x);
+      const height = Math.abs(pt.y - sp.y);
+
+      setSelection({ isDragging: true, rect: { x, y, width, height } });
     },
-    [getCellFromPoint, updateSumInfo],
+    [getRelativePoint],
   );
 
   const handlePointerUp = useCallback(() => {
-    const start = startRef.current;
-    const end = selection.end;
-    startRef.current = null;
+    const rect = selection.rect;
+    startPoint.current = null;
 
-    if (start && end) {
-      const move: Move = {
-        startRow: start.row,
-        startCol: start.col,
-        endRow: end.row,
-        endCol: end.col,
-      };
-      onCommit(move);
+    if (rect && rect.width > 2 && rect.height > 2) {
+      const move = getCellsInRect(rect);
+      if (move) {
+        onCommit(move);
+      }
     }
 
-    setSelection({ start: null, end: null, isDragging: false, sumInfo: null });
-  }, [selection.end, onCommit]);
+    setSelection({ isDragging: false, rect: null });
+  }, [selection.rect, getCellsInRect, onCommit]);
 
   return {
     selection,
