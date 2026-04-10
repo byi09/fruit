@@ -54,19 +54,19 @@ export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Sum preview */}
-      {selection.isDragging && selection.sumInfo && (
-        <div className="text-center mb-2 animate-fade-in">
+      {/* Sum preview — always reserves space to prevent layout shift */}
+      <div className="text-center mb-2 h-8">
+        {selection.isDragging && selection.sumInfo && (
           <span
-            className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold ${
+            className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
               isValid ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
             }`}
           >
             Sum: {selection.sumInfo.sum} / {config.targetSum}
             {selection.sumInfo.count > 0 && ` (${selection.sumInfo.count} apples)`}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Grid */}
       <div

@@ -42,9 +42,12 @@ export const CellView = memo(function CellView({ cell, clearing }: CellProps) {
         clearing ? 'animate-pop' : ''
       }`}
     >
-      <span className={`${VALUE_COLORS[cell.value] || 'text-gray-800'} font-bold text-sm sm:text-base pointer-events-none`}>
-        {cell.value}
-      </span>
+      <div className="relative pointer-events-none flex items-center justify-center w-full h-full">
+        <span className="text-lg sm:text-2xl leading-none">🍎</span>
+        <span className={`absolute inset-0 flex items-center justify-center ${VALUE_COLORS[cell.value] || 'text-gray-800'} font-extrabold text-[10px] sm:text-xs drop-shadow-[0_1px_0_rgba(255,255,255,0.8)]`}>
+          {cell.value}
+        </span>
+      </div>
     </div>
   );
 });
