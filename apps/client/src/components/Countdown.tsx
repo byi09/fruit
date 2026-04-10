@@ -5,35 +5,50 @@ interface CountdownProps {
 }
 
 export function Countdown({ startsAt }: CountdownProps) {
-  const [count, setCount] = useState<number | null>(null);
+  const [display, setDisplay] = useState<string>('3');
 
   useEffect(() => {
-    const update = () => {
-      const remaining = Math.ceil((startsAt - Date.now()) / 1000);
-      setCount(remaining > 0 ? remaining : null);
-    };
+    const totalMs = startsAt - Date.now();
+    const totalSeconds = Math.max(1, Math.ceil(totalMs / 1000));
 
-    update();
-    const interval = setInterval(update, 100);
-    return () => clearInterval(interval);
+    // Immediately show the first number
+    setDisplay(String(totalSeconds));
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    for (let i = 1; i < totalSeconds; i++) {
+      timers.push(
+        setTimeout(() => {
+          setDisplay(String(totalSeconds - i));
+        }, i * 1000),
+      );
+    }
+
+    // Show GO! at the end
+    timers.push(
+      setTimeout(() => {
+        setDisplay('GO!');
+      }, totalSeconds * 1000),
+    );
+
+    return () => timers.forEach(clearTimeout);
   }, [startsAt]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900/80 fixed inset-0 z-50">
-      <div className="text-center animate-fade-in">
-        {count !== null ? (
-          <>
-            <div
-              key={count}
-              className="text-[120px] font-extrabold text-white drop-shadow-2xl animate-pop"
-              style={{ animationDuration: '0.8s' }}
-            >
-              {count}
-            </div>
-            <p className="text-white/70 text-xl mt-4">Get ready!</p>
-          </>
-        ) : (
-          <div className="text-6xl font-extrabold text-emerald-400 animate-pop">GO!</div>
+      <div className="text-center">
+        <div
+          key={display}
+          className="font-extrabold drop-shadow-2xl animate-fade-in"
+          style={{
+            fontSize: display === 'GO!' ? '80px' : '140px',
+            color: display === 'GO!' ? '#34d399' : 'white',
+          }}
+        >
+          {display}
+        </div>
+        {display !== 'GO!' && (
+          <p className="text-white/70 text-xl mt-4">Get ready!</p>
         )}
       </div>
     </div>
