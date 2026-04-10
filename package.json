@@ -14,8 +14,10 @@
     "lint": "turbo run lint"
   },
   "packageManager": "npm@10.9.2",
+  "dependencies": {
+    "turbo": "^2.1.0"
+  },
   "devDependencies": {
-    "turbo": "^2.1.0",
     "typescript": "^5.5.0"
   }
 }
