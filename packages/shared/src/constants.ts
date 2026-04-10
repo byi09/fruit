@@ -1,0 +1,9 @@
+export const GRID_ROWS = 10;
+export const GRID_COLS = 17;
+export const TARGET_SUM = 10;
+export const GAME_DURATION_MS = 120_000;
+export const COUNTDOWN_MS = 3_000;
+export const RECONNECT_GRACE_MS = 30_000;
+export const ROOM_CLEANUP_MS = 600_000; // 10 minutes
+export const MAX_PLAYERS_PER_ROOM = 8;
+export const ROOM_CODE_LENGTH = 4;

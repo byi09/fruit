@@ -1,0 +1,21 @@
+{
+  "name": "fruitbox",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:shared": "cd packages/shared && npx vitest run",
+    "test:server": "cd apps/server && npx vitest run",
+    "lint": "turbo run lint"
+  },
+  "packageManager": "npm@10.9.2",
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.0"
+  }
+}
