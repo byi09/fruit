@@ -14,12 +14,8 @@ interface GameBoardProps {
 export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const { selection, handlePointerDown, handlePointerMove, handlePointerUp } = useSelection(
-    board,
-    config.targetSum,
-    onMove,
-    gridRef,
-  );
+  const { selection, selectedSet, handlePointerDown, handlePointerMove, handlePointerUp } =
+    useSelection(board, config.targetSum, onMove, gridRef);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -63,7 +59,11 @@ export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
       >
         {board.map((row, r) =>
           row.map((cell, c) => (
-            <CellView key={`${r}-${c}`} cell={cell} />
+            <CellView
+              key={`${r}-${c}`}
+              cell={cell}
+              selected={selectedSet.has(`${r},${c}`)}
+            />
           )),
         )}
 

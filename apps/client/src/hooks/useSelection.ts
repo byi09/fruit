@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef, type RefObject } from 'react';
+import { useState, useCallback, useRef, useMemo, type RefObject } from 'react';
 import type { Move, Board } from '@fruitbox/shared';
+import { normalizeMove } from '@fruitbox/shared';
 
 interface PixelRect {
   x: number;
@@ -11,6 +12,7 @@ interface PixelRect {
 interface SelectionState {
   isDragging: boolean;
   rect: PixelRect | null;
+  selectedCells: Move | null; // normalized cell range
 }
 
 export function useSelection(
@@ -22,6 +24,7 @@ export function useSelection(
   const [selection, setSelection] = useState<SelectionState>({
     isDragging: false,
     rect: null,
+    selectedCells: null,
   });
   const startPoint = useRef<{ x: number; y: number } | null>(null);
 
@@ -47,23 +50,17 @@ export function useSelection(
       const cellW = gridRect.width / cols;
       const cellH = gridRect.height / rows;
 
-      // Find which cells are inside the drawn rectangle
       const startCol = Math.floor(rect.x / cellW);
       const startRow = Math.floor(rect.y / cellH);
       const endCol = Math.floor((rect.x + rect.width - 1) / cellW);
       const endRow = Math.floor((rect.y + rect.height - 1) / cellH);
 
-      const clampedStartRow = Math.max(0, Math.min(startRow, rows - 1));
-      const clampedStartCol = Math.max(0, Math.min(startCol, cols - 1));
-      const clampedEndRow = Math.max(0, Math.min(endRow, rows - 1));
-      const clampedEndCol = Math.max(0, Math.min(endCol, cols - 1));
-
-      return {
-        startRow: clampedStartRow,
-        startCol: clampedStartCol,
-        endRow: clampedEndRow,
-        endCol: clampedEndCol,
-      };
+      return normalizeMove({
+        startRow: Math.max(0, Math.min(startRow, rows - 1)),
+        startCol: Math.max(0, Math.min(startCol, cols - 1)),
+        endRow: Math.max(0, Math.min(endRow, rows - 1)),
+        endCol: Math.max(0, Math.min(endCol, cols - 1)),
+      });
     },
     [board, gridRef],
   );
@@ -73,9 +70,10 @@ export function useSelection(
       const pt = getRelativePoint(clientX, clientY);
       if (!pt) return;
       startPoint.current = pt;
-      setSelection({ isDragging: true, rect: { x: pt.x, y: pt.y, width: 0, height: 0 } });
+      const rect = { x: pt.x, y: pt.y, width: 0, height: 0 };
+      setSelection({ isDragging: true, rect, selectedCells: getCellsInRect(rect) });
     },
-    [getRelativePoint],
+    [getRelativePoint, getCellsInRect],
   );
 
   const handlePointerMove = useCallback(
@@ -89,10 +87,11 @@ export function useSelection(
       const y = Math.min(sp.y, pt.y);
       const width = Math.abs(pt.x - sp.x);
       const height = Math.abs(pt.y - sp.y);
+      const rect = { x, y, width, height };
 
-      setSelection({ isDragging: true, rect: { x, y, width, height } });
+      setSelection({ isDragging: true, rect, selectedCells: getCellsInRect(rect) });
     },
-    [getRelativePoint],
+    [getRelativePoint, getCellsInRect],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -106,11 +105,25 @@ export function useSelection(
       }
     }
 
-    setSelection({ isDragging: false, rect: null });
+    setSelection({ isDragging: false, rect: null, selectedCells: null });
   }, [selection.rect, getCellsInRect, onCommit]);
+
+  // Build a Set of "r,c" strings for O(1) lookup
+  const selectedSet = useMemo(() => {
+    const set = new Set<string>();
+    const cells = selection.selectedCells;
+    if (!cells) return set;
+    for (let r = cells.startRow; r <= cells.endRow; r++) {
+      for (let c = cells.startCol; c <= cells.endCol; c++) {
+        set.add(`${r},${c}`);
+      }
+    }
+    return set;
+  }, [selection.selectedCells]);
 
   return {
     selection,
+    selectedSet,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

@@ -12,8 +12,6 @@ export function SelectionOverlay({ rect }: SelectionOverlayProps) {
         width: rect.width,
         height: rect.height,
         border: '2px dashed rgba(59, 130, 246, 0.8)',
-        backgroundColor: 'rgba(59, 130, 246, 0.08)',
-        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.12)',
       }}
     />
   );
