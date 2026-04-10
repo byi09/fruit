@@ -71,7 +71,7 @@ export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
       {/* Grid */}
       <div
         ref={gridRef}
-        className="relative grid gap-0.5 sm:gap-1 p-1 sm:p-2 bg-gray-200 rounded-xl select-none touch-none"
+        className="relative grid gap-0 p-1 sm:p-2 bg-emerald-800/10 rounded-xl select-none touch-none"
         style={{
           gridTemplateColumns: `repeat(${config.cols}, 1fr)`,
           gridTemplateRows: `repeat(${config.rows}, 1fr)`,
