@@ -35,7 +35,7 @@ export function createApp() {
 
   // In production, serve the client build
   if (config.nodeEnv === 'production') {
-    const clientDist = path.join(__dirname, '../../../client/dist');
+    const clientDist = path.join(__dirname, '../../client/dist');
     app.use(express.static(clientDist));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(clientDist, 'index.html'));
