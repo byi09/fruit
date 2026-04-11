@@ -142,6 +142,29 @@ export function registerHandlers(
     ack(result);
   });
 
+  // --- Game: Pause ---
+  socket.on('game:pause', (ack) => {
+    const mapping = socketToPlayer.get(socket.id);
+    if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+
+    const result = gameController.pauseGame(mapping.roomCode, mapping.playerId);
+    ack(result);
+  });
+
+  // --- Game: Resume ---
+  socket.on('game:resume', (ack) => {
+    const mapping = socketToPlayer.get(socket.id);
+    if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+
+    const result = gameController.resumeGame(mapping.roomCode, mapping.playerId);
+    ack(result);
+  });
+
+  // --- Time Sync ---
+  socket.on('time:sync', (payload, ack) => {
+    ack({ clientSendTime: payload.clientSendTime, serverTime: Date.now() });
+  });
+
   // --- Chat ---
   socket.on('chat:send', (payload) => {
     const mapping = socketToPlayer.get(socket.id);

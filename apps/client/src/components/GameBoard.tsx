@@ -44,13 +44,16 @@ export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
   );
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className={`w-full max-w-5xl mx-auto transition-opacity duration-200 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div
         ref={gridRef}
-        className="relative grid p-0 bg-emerald-800/10 rounded-xl select-none touch-none overflow-hidden"
+        className="relative grid rounded-xl select-none touch-none overflow-hidden bg-surface border border-white/[0.06]"
         style={{
           gridTemplateColumns: `repeat(${config.cols}, 1fr)`,
           gridTemplateRows: `repeat(${config.rows}, 1fr)`,
+          gap: '1px',
+          padding: '1px',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03))',
         }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

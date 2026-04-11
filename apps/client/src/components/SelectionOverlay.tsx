@@ -11,7 +11,8 @@ export function SelectionOverlay({ rect }: SelectionOverlayProps) {
         top: rect.y,
         width: rect.width,
         height: rect.height,
-        border: '2px dashed rgba(59, 130, 246, 0.8)',
+        border: '2px solid rgba(233, 69, 96, 0.7)',
+        boxShadow: '0 0 12px rgba(233, 69, 96, 0.3), inset 0 0 12px rgba(233, 69, 96, 0.1)',
       }}
     />
   );

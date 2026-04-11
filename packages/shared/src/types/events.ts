@@ -43,8 +43,21 @@ export interface ClientEvents {
     ack: (res: { ok: boolean; error?: string }) => void,
   ) => void;
 
+  'game:pause': (
+    ack: (res: { ok: boolean; error?: string }) => void,
+  ) => void;
+
+  'game:resume': (
+    ack: (res: { ok: boolean; error?: string }) => void,
+  ) => void;
+
   'chat:send': (
     payload: { message: string },
+  ) => void;
+
+  'time:sync': (
+    payload: { clientSendTime: number },
+    ack: (res: { clientSendTime: number; serverTime: number }) => void,
   ) => void;
 }
 
@@ -62,6 +75,8 @@ export interface ServerEvents {
   'game:score_update': (payload: { playerId: string; score: number; movesMade: number }) => void;
   'game:finished': (payload: { standings: StandingEntry[]; roundNumber: number; roundHistory: RoundResult[] }) => void;
   'game:rematch_starting': (payload: { seed: number; startsAt: number }) => void;
+  'game:paused': (payload: { pausedBy: string; playerName: string }) => void;
+  'game:resumed': (payload: { endsAt: number }) => void;
 
   'chat:message': (payload: { playerId: string; playerName: string; message: string; timestamp: number }) => void;
   'chat:system': (payload: { message: string; timestamp: number }) => void;

@@ -81,6 +81,53 @@ export class GameController {
     this.gameTimers.set(roomCode, gameTimer);
   }
 
+  pauseGame(roomCode: string, playerId: string): { ok: boolean; error?: string } {
+    const room = this.roomManager.getRoom(roomCode);
+    if (!room) return { ok: false, error: 'Room not found' };
+    if (room.status !== RoomStatus.PLAYING) return { ok: false, error: 'Game is not playing' };
+
+    const player = room.players[playerId];
+    if (!player) return { ok: false, error: 'Player not found' };
+
+    room.pausedAt = Date.now();
+    room.remainingMs = Math.max(0, (room.gameEndsAt ?? 0) - room.pausedAt);
+    room.pausedBy = playerId;
+    room.status = RoomStatus.PAUSED;
+
+    const gameTimer = this.gameTimers.get(roomCode);
+    if (gameTimer) {
+      clearTimeout(gameTimer);
+      this.gameTimers.delete(roomCode);
+    }
+
+    this.io.to(roomCode).emit('game:paused', { pausedBy: playerId, playerName: player.name });
+    return { ok: true };
+  }
+
+  resumeGame(roomCode: string, playerId: string): { ok: boolean; error?: string } {
+    const room = this.roomManager.getRoom(roomCode);
+    if (!room) return { ok: false, error: 'Room not found' };
+    if (room.status !== RoomStatus.PAUSED) return { ok: false, error: 'Game is not paused' };
+
+    const player = room.players[playerId];
+    if (!player) return { ok: false, error: 'Player not found' };
+
+    const remaining = room.remainingMs ?? 0;
+    room.gameEndsAt = Date.now() + remaining;
+    room.status = RoomStatus.PLAYING;
+    room.pausedAt = undefined;
+    room.remainingMs = undefined;
+    room.pausedBy = undefined;
+
+    const gameTimer = setTimeout(() => {
+      this.endGame(roomCode);
+    }, remaining);
+    this.gameTimers.set(roomCode, gameTimer);
+
+    this.io.to(roomCode).emit('game:resumed', { endsAt: room.gameEndsAt });
+    return { ok: true };
+  }
+
   processMove(roomCode: string, playerId: string, move: Move): MoveResult {
     const room = this.roomManager.getRoom(roomCode);
     if (!room || room.status !== RoomStatus.PLAYING) {

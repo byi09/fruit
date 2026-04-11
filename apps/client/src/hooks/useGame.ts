@@ -30,6 +30,8 @@ export function useGame(setScreen: (s: Screen) => void) {
   const [myScore, setMyScore] = useState(0);
   const [myMoves, setMyMoves] = useState(0);
   const [lastClear, setLastClear] = useState<{ row: number; col: number; count: number } | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pausedByName, setPausedByName] = useState<string | null>(null);
   const boardRef = useRef<Board | null>(null);
 
   // Keep ref in sync with state
@@ -53,6 +55,8 @@ export function useGame(setScreen: (s: Screen) => void) {
       setMyMoves(0);
       setScores({});
       setStandings(null);
+      setIsPaused(false);
+      setPausedByName(null);
       setScreen('playing');
     }
 
@@ -67,19 +71,36 @@ export function useGame(setScreen: (s: Screen) => void) {
       setStandings(data.standings);
       setRoundNumber(data.roundNumber);
       setRoundHistory(data.roundHistory);
+      setIsPaused(false);
+      setPausedByName(null);
       setScreen('results');
+    }
+
+    function onGamePaused(data: { pausedBy: string; playerName: string }) {
+      setIsPaused(true);
+      setPausedByName(data.playerName);
+    }
+
+    function onGameResumed(data: { endsAt: number }) {
+      setEndsAt(data.endsAt);
+      setIsPaused(false);
+      setPausedByName(null);
     }
 
     socket.on('game:countdown', onCountdown);
     socket.on('game:started', onGameStarted);
     socket.on('game:score_update', onScoreUpdate);
     socket.on('game:finished', onGameFinished);
+    socket.on('game:paused', onGamePaused);
+    socket.on('game:resumed', onGameResumed);
 
     return () => {
       socket.off('game:countdown', onCountdown);
       socket.off('game:started', onGameStarted);
       socket.off('game:score_update', onScoreUpdate);
       socket.off('game:finished', onGameFinished);
+      socket.off('game:paused', onGamePaused);
+      socket.off('game:resumed', onGameResumed);
     };
   }, [setScreen]);
 
@@ -127,6 +148,22 @@ export function useGame(setScreen: (s: Screen) => void) {
     });
   }, []);
 
+  const pauseGame = useCallback(() => {
+    socket.emit('game:pause', (res) => {
+      if (!res.ok) {
+        console.error('Pause failed:', res.error);
+      }
+    });
+  }, []);
+
+  const resumeGame = useCallback(() => {
+    socket.emit('game:resume', (res) => {
+      if (!res.ok) {
+        console.error('Resume failed:', res.error);
+      }
+    });
+  }, []);
+
   // Restore board on reconnect if provided
   const restoreBoard = useCallback((restoredBoard: Board) => {
     setBoard(restoredBoard);
@@ -145,9 +182,13 @@ export function useGame(setScreen: (s: Screen) => void) {
     myScore,
     myMoves,
     lastClear,
+    isPaused,
+    pausedByName,
     startGame,
     submitMove,
     requestRematch,
     restoreBoard,
+    pauseGame,
+    resumeGame,
   };
 }

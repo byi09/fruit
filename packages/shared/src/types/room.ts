@@ -5,6 +5,7 @@ export enum RoomStatus {
   LOBBY = 'lobby',
   COUNTDOWN = 'countdown',
   PLAYING = 'playing',
+  PAUSED = 'paused',
   FINISHED = 'finished',
 }
 
@@ -35,4 +36,7 @@ export interface RoomState {
   countdownStartedAt?: number;
   gameStartedAt?: number;
   gameEndsAt?: number;
+  pausedAt?: number;
+  remainingMs?: number;
+  pausedBy?: string;
 }
