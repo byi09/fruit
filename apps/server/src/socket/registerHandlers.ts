@@ -142,6 +142,28 @@ export function registerHandlers(
     ack(result);
   });
 
+  // --- Chat ---
+  socket.on('chat:send', (payload) => {
+    const mapping = socketToPlayer.get(socket.id);
+    if (!mapping) return;
+
+    const room = roomManager.getRoom(mapping.roomCode);
+    if (!room) return;
+
+    const player = room.players[mapping.playerId];
+    if (!player) return;
+
+    const message = payload.message.trim().slice(0, 200);
+    if (!message) return;
+
+    io.to(mapping.roomCode).emit('chat:message', {
+      playerId: mapping.playerId,
+      playerName: player.name,
+      message,
+      timestamp: Date.now(),
+    });
+  });
+
   // --- Disconnect ---
   socket.on('disconnect', () => {
     const mapping = socketToPlayer.get(socket.id);

@@ -1,6 +1,7 @@
 import { useSocket } from './hooks/useSocket';
 import { useRoom } from './hooks/useRoom';
 import { useGame } from './hooks/useGame';
+import { useChat } from './hooks/useChat';
 import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { Countdown } from './components/Countdown';
@@ -8,6 +9,8 @@ import { GameBoard } from './components/GameBoard';
 import { Timer } from './components/Timer';
 import { Leaderboard } from './components/Leaderboard';
 import { Results } from './components/Results';
+import { Chat } from './components/Chat';
+import { PlayerStats } from './components/PlayerStats';
 
 export default function App() {
   const { isConnected } = useSocket();
@@ -37,6 +40,7 @@ export default function App() {
     submitMove,
     requestRematch,
   } = useGame(setScreen);
+  const { messages, sendMessage, unreadCount, markVisible } = useChat();
 
   // Only show connection badge when disconnected
   const connectionBadge = !isConnected ? (
@@ -82,12 +86,14 @@ export default function App() {
   }
 
   if (screen === 'playing' && board && config && endsAt && roomState && playerId) {
+    markVisible(true);
+    const totalCells = config.rows * config.cols;
     return (
       <>
         {connectionBadge}
         <div className="min-h-screen p-2 sm:p-4">
           {/* Top bar */}
-          <div className="max-w-6xl mx-auto mb-3">
+          <div className="max-w-7xl mx-auto mb-3">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="text-center">
@@ -110,12 +116,20 @@ export default function App() {
             </div>
           </div>
 
-          {/* Game area */}
-          <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
+          {/* 3-column game area */}
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4">
+            {/* Left: Chat */}
+            <div className="lg:w-72 lg:min-h-[500px] flex flex-col order-2 lg:order-1">
+              <Chat messages={messages} onSend={sendMessage} myPlayerId={playerId} />
+            </div>
+
+            {/* Center: Board */}
+            <div className="flex-1 order-1 lg:order-2">
               <GameBoard board={board} config={config} onMove={submitMove} />
             </div>
-            <div className="lg:w-64">
+
+            {/* Right: Leaderboard + Stats */}
+            <div className="lg:w-64 space-y-4 order-3">
               <Leaderboard
                 roomState={roomState}
                 scores={scores}
@@ -123,6 +137,7 @@ export default function App() {
                 myScore={myScore}
                 myMoves={myMoves}
               />
+              <PlayerStats score={myScore} moves={myMoves} totalCells={totalCells} />
             </div>
           </div>
         </div>
