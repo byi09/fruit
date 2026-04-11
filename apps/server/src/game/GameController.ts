@@ -128,8 +128,18 @@ export class GameController {
     // Compute final standings
     const standings = computeStandings(room.players);
 
-    // Broadcast results
-    this.io.to(roomCode).emit('game:finished', { standings });
+    // Archive this round's results
+    room.roundHistory.push({
+      roundNumber: room.roundNumber,
+      standings,
+    });
+
+    // Broadcast results with history
+    this.io.to(roomCode).emit('game:finished', {
+      standings,
+      roundNumber: room.roundNumber,
+      roundHistory: room.roundHistory,
+    });
 
     // Cleanup timers and boards
     this.cleanup(roomCode);

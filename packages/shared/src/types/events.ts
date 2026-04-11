@@ -1,5 +1,5 @@
 import type { Board, Move, MoveResult } from './board.js';
-import type { GameConfig, RoomState } from './room.js';
+import type { GameConfig, RoomState, RoundResult } from './room.js';
 import type { PlayerState } from './player.js';
 
 export interface StandingEntry {
@@ -56,7 +56,7 @@ export interface ServerEvents {
   'game:countdown': (payload: { startsAt: number }) => void;
   'game:started': (payload: { seed: number; endsAt: number; config: GameConfig }) => void;
   'game:score_update': (payload: { playerId: string; score: number; movesMade: number }) => void;
-  'game:finished': (payload: { standings: StandingEntry[] }) => void;
+  'game:finished': (payload: { standings: StandingEntry[]; roundNumber: number; roundHistory: RoundResult[] }) => void;
   'game:rematch_starting': (payload: { seed: number; startsAt: number }) => void;
 
   'error': (payload: { message: string }) => void;

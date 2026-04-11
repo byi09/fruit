@@ -44,10 +44,10 @@ export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       <div
         ref={gridRef}
-        className="relative grid gap-0 p-1 sm:p-2 bg-emerald-800/10 rounded-xl select-none touch-none overflow-hidden"
+        className="relative grid p-0 bg-emerald-800/10 rounded-xl select-none touch-none overflow-hidden"
         style={{
           gridTemplateColumns: `repeat(${config.cols}, 1fr)`,
           gridTemplateRows: `repeat(${config.rows}, 1fr)`,

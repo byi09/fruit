@@ -49,6 +49,8 @@ export class RoomManager {
       seed: 0,
       config: { ...DEFAULT_CONFIG },
       createdAt: Date.now(),
+      roundNumber: 1,
+      roundHistory: [],
     };
 
     this.rooms.set(code, room);
@@ -142,6 +144,7 @@ export class RoomManager {
 
     room.status = RoomStatus.LOBBY;
     room.seed = 0;
+    room.roundNumber += 1;
     room.countdownStartedAt = undefined;
     room.gameStartedAt = undefined;
     room.gameEndsAt = undefined;

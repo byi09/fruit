@@ -1,4 +1,5 @@
 import type { PlayerState } from './player.js';
+import type { StandingEntry } from './events.js';
 
 export enum RoomStatus {
   LOBBY = 'lobby',
@@ -15,6 +16,11 @@ export interface GameConfig {
   targetSum: number;
 }
 
+export interface RoundResult {
+  roundNumber: number;
+  standings: StandingEntry[];
+}
+
 export interface RoomState {
   id: string;
   code: string;
@@ -24,6 +30,8 @@ export interface RoomState {
   seed: number;
   config: GameConfig;
   createdAt: number;
+  roundNumber: number;
+  roundHistory: RoundResult[];
   countdownStartedAt?: number;
   gameStartedAt?: number;
   gameEndsAt?: number;

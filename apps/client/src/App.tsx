@@ -29,6 +29,8 @@ export default function App() {
     startsAt,
     scores,
     standings,
+    roundNumber,
+    roundHistory,
     myScore,
     myMoves,
     startGame,
@@ -134,6 +136,8 @@ export default function App() {
         {connectionBadge}
         <Results
           standings={standings}
+          roundNumber={roundNumber}
+          roundHistory={roundHistory}
           myPlayerId={playerId}
           isHost={isHost}
           onRematch={requestRematch}

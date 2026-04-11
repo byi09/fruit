@@ -4,6 +4,7 @@ import {
   type Move,
   type GameConfig,
   type StandingEntry,
+  type RoundResult,
   generateBoard,
   validateMove,
   applyMove,
@@ -24,6 +25,8 @@ export function useGame(setScreen: (s: Screen) => void) {
   const [startsAt, setStartsAt] = useState<number | null>(null);
   const [scores, setScores] = useState<Record<string, ScoreInfo>>({});
   const [standings, setStandings] = useState<StandingEntry[] | null>(null);
+  const [roundNumber, setRoundNumber] = useState(1);
+  const [roundHistory, setRoundHistory] = useState<RoundResult[]>([]);
   const [myScore, setMyScore] = useState(0);
   const [myMoves, setMyMoves] = useState(0);
   const [lastClear, setLastClear] = useState<{ row: number; col: number; count: number } | null>(null);
@@ -60,8 +63,10 @@ export function useGame(setScreen: (s: Screen) => void) {
       }));
     }
 
-    function onGameFinished(data: { standings: StandingEntry[] }) {
+    function onGameFinished(data: { standings: StandingEntry[]; roundNumber: number; roundHistory: RoundResult[] }) {
       setStandings(data.standings);
+      setRoundNumber(data.roundNumber);
+      setRoundHistory(data.roundHistory);
       setScreen('results');
     }
 
@@ -135,6 +140,8 @@ export function useGame(setScreen: (s: Screen) => void) {
     startsAt,
     scores,
     standings,
+    roundNumber,
+    roundHistory,
     myScore,
     myMoves,
     lastClear,
