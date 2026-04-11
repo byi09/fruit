@@ -11,16 +11,48 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
   const clearPct = totalCells > 0 ? Math.round((score / totalCells) * 100) : 0;
 
   const [elapsed, setElapsed] = useState(() => Math.max(0, (performance.now() - (startsAt - Date.now() + performance.now())) / 1000));
+  const [peakRate, setPeakRate] = useState(0);
   const offsetRef = useRef(startsAt - Date.now() + performance.now());
+  const historyRef = useRef<{ time: number; score: number }[]>([]);
 
   useEffect(() => {
     offsetRef.current = startsAt - Date.now() + performance.now();
+    historyRef.current = [];
+    setPeakRate(0);
   }, [startsAt]);
+
+  // Track score snapshots for 5s window peak calculation
+  const scoreRef = useRef(score);
+  scoreRef.current = score;
 
   useEffect(() => {
     let raf: number;
     const tick = () => {
-      setElapsed(Math.max(0, (performance.now() - offsetRef.current) / 1000));
+      const now = performance.now();
+      const el = Math.max(0, (now - offsetRef.current) / 1000);
+      setElapsed(el);
+
+      // Record current score with timestamp
+      const history = historyRef.current;
+      history.push({ time: now, score: scoreRef.current });
+
+      // Prune entries older than 5s
+      const cutoff = now - 5000;
+      while (history.length > 0 && history[0].time < cutoff) {
+        history.shift();
+      }
+
+      // Calculate rate over the window
+      if (history.length >= 2) {
+        const oldest = history[0];
+        const newest = history[history.length - 1];
+        const dt = (newest.time - oldest.time) / 1000;
+        if (dt >= 0.5) {
+          const rate = (newest.score - oldest.score) / dt;
+          setPeakRate(prev => Math.max(prev, rate));
+        }
+      }
+
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -28,6 +60,7 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
   }, []);
 
   const efficiency = elapsed > 0 ? (score / elapsed).toFixed(3) : '0.000';
+  const peakDisplay = peakRate.toFixed(3);
 
   return (
     <div className="bg-white/90 backdrop-blur rounded-xl shadow-md p-3 sm:p-4">
@@ -66,6 +99,10 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
         <div className="col-span-2 bg-gray-50 rounded-lg p-2 text-center">
           <div className="text-xl font-bold text-amber-600 tabular-nums font-mono tracking-tight">{efficiency}</div>
           <div className="text-[10px] text-gray-400 uppercase">Apples / Second</div>
+        </div>
+        <div className="col-span-2 bg-gray-50 rounded-lg p-2 text-center">
+          <div className="text-xl font-bold text-rose-500 tabular-nums font-mono tracking-tight">{peakDisplay}</div>
+          <div className="text-[10px] text-gray-400 uppercase">Peak (5s window)</div>
         </div>
       </div>
     </div>
