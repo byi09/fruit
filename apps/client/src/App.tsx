@@ -43,6 +43,11 @@ export default function App() {
   } = useGame(setScreen);
   const { messages, sendMessage, unreadCount, markVisible } = useChat();
 
+  // Mark chat visible when on playing screen
+  useEffect(() => {
+    markVisible(screen === 'playing');
+  }, [screen, markVisible]);
+
   // Only show connection badge when disconnected
   const connectionBadge = !isConnected ? (
     <div className="fixed top-3 right-3 z-40">
@@ -85,11 +90,6 @@ export default function App() {
       </>
     );
   }
-
-  // Mark chat visible when on playing screen
-  useEffect(() => {
-    markVisible(screen === 'playing');
-  }, [screen, markVisible]);
 
   if (screen === 'playing' && board && config && endsAt && roomState && playerId) {
     const totalCells = config.rows * config.cols;
