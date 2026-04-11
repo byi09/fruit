@@ -57,7 +57,7 @@ export function Countdown({ startsAt }: CountdownProps) {
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center game-bg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/90 backdrop-blur-sm">
       <div className="relative flex items-center justify-center animate-scale-in">
         <svg
           viewBox="0 0 100 100"

@@ -100,21 +100,21 @@ export default function App() {
     return (
       <>
         {connectionBadge}
-        <div className="min-h-screen game-bg text-white">
+        <div className="min-h-screen game-bg">
           {/* Top bar */}
-          <div className="px-3 sm:px-6 py-3 border-b border-white/[0.06]">
+          <div className="px-3 sm:px-6 py-3 border-b border-stone-200/50 bg-white/50 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               {/* Left: score + moves */}
               <div className="flex items-center gap-5">
                 <div>
-                  <div className="text-[10px] font-medium text-white/30 uppercase tracking-wider">Score</div>
-                  <div className="text-2xl font-extrabold tabular-nums text-white leading-tight">
+                  <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Score</div>
+                  <div className="text-2xl font-extrabold tabular-nums text-stone-900 leading-tight">
                     {myScore}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-medium text-white/30 uppercase tracking-wider">Moves</div>
-                  <div className="text-2xl font-extrabold tabular-nums text-white/70 leading-tight">
+                  <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Moves</div>
+                  <div className="text-2xl font-extrabold tabular-nums text-stone-500 leading-tight">
                     {myMoves}
                   </div>
                 </div>
@@ -128,7 +128,7 @@ export default function App() {
                 <button
                   onClick={isPaused ? resumeGame : pauseGame}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                             bg-white/[0.06] hover:bg-white/[0.12] text-white/60 hover:text-white border border-white/[0.06]"
+                             bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-700 border border-stone-200/60"
                   title={isPaused ? 'Resume game' : 'Pause game'}
                 >
                   {isPaused ? (
@@ -138,7 +138,7 @@ export default function App() {
                   )}
                   <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'}</span>
                 </button>
-                <span className="text-xs font-mono text-white/20 tracking-wider">
+                <span className="text-xs font-mono text-stone-300 tracking-wider">
                   {roomState.code}
                 </span>
               </div>

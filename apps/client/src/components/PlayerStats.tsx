@@ -65,13 +65,13 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
 
   return (
     <div className="panel p-3">
-      <h3 className="text-[10px] font-medium text-white/30 uppercase tracking-wider mb-3">Stats</h3>
+      <h3 className="text-[10px] font-medium text-stone-400 uppercase tracking-wider mb-3">Stats</h3>
 
       {/* Score ring */}
       <div className="flex items-center justify-center mb-3">
         <div className="relative w-20 h-20">
           <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-            <circle cx="40" cy="40" r={RING_R} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+            <circle cx="40" cy="40" r={RING_R} fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="5" />
             <circle
               cx="40" cy="40" r={RING_R} fill="none"
               stroke="#e94560" strokeWidth="5"
@@ -81,29 +81,29 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-extrabold text-white tabular-nums">{score}</span>
-            <span className="text-[9px] text-white/25 uppercase">cleared</span>
+            <span className="text-lg font-extrabold text-stone-800 tabular-nums">{score}</span>
+            <span className="text-[9px] text-stone-400 uppercase">cleared</span>
           </div>
         </div>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-1.5">
-        <div className="bg-white/[0.04] rounded-lg p-2 text-center">
-          <div className="text-sm font-bold text-white/80 tabular-nums">{moves}</div>
-          <div className="text-[9px] text-white/25 uppercase">Moves</div>
+        <div className="bg-stone-50 rounded-lg p-2 text-center">
+          <div className="text-sm font-bold text-stone-700 tabular-nums">{moves}</div>
+          <div className="text-[9px] text-stone-400 uppercase">Moves</div>
         </div>
-        <div className="bg-white/[0.04] rounded-lg p-2 text-center">
-          <div className="text-sm font-bold text-white/80 tabular-nums">{clearPct}%</div>
-          <div className="text-[9px] text-white/25 uppercase">Board</div>
+        <div className="bg-stone-50 rounded-lg p-2 text-center">
+          <div className="text-sm font-bold text-stone-700 tabular-nums">{clearPct}%</div>
+          <div className="text-[9px] text-stone-400 uppercase">Board</div>
         </div>
-        <div className="bg-white/[0.04] rounded-lg p-2 text-center">
-          <div className="text-sm font-bold text-accent-light tabular-nums font-mono">{efficiency}</div>
-          <div className="text-[9px] text-white/25 uppercase">/sec</div>
+        <div className="bg-stone-50 rounded-lg p-2 text-center">
+          <div className="text-sm font-bold text-accent tabular-nums font-mono">{efficiency}</div>
+          <div className="text-[9px] text-stone-400 uppercase">/sec</div>
         </div>
-        <div className="bg-white/[0.04] rounded-lg p-2 text-center">
-          <div className="text-sm font-bold text-amber-400 tabular-nums font-mono">{peakDisplay}</div>
-          <div className="text-[9px] text-white/25 uppercase">Peak</div>
+        <div className="bg-stone-50 rounded-lg p-2 text-center">
+          <div className="text-sm font-bold text-amber-600 tabular-nums font-mono">{peakDisplay}</div>
+          <div className="text-[9px] text-stone-400 uppercase">Peak</div>
         </div>
       </div>
     </div>

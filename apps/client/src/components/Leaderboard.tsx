@@ -31,7 +31,7 @@ export function Leaderboard({ roomState, scores, myPlayerId, myScore, myMoves }:
 
   return (
     <div className="panel p-3">
-      <h3 className="text-[10px] font-medium text-white/30 uppercase tracking-wider mb-2.5">Leaderboard</h3>
+      <h3 className="text-[10px] font-medium text-stone-400 uppercase tracking-wider mb-2.5">Leaderboard</h3>
       <div className="space-y-1">
         {players.map((p, i) => {
           const isMe = p.id === myPlayerId;
@@ -39,18 +39,18 @@ export function Leaderboard({ roomState, scores, myPlayerId, myScore, myMoves }:
             <div
               key={p.id}
               className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-colors ${
-                isMe ? 'bg-accent/10' : 'hover:bg-white/[0.03]'
+                isMe ? 'bg-accent/[0.06]' : 'hover:bg-stone-50'
               } ${!p.connected ? 'opacity-40' : ''}`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-white/25 text-xs tabular-nums w-3 text-right shrink-0">{i + 1}</span>
-                <span className={`truncate ${isMe ? 'text-white font-medium' : 'text-white/60'}`}>
+                <span className="text-stone-300 text-xs tabular-nums w-3 text-right shrink-0">{i + 1}</span>
+                <span className={`truncate ${isMe ? 'text-stone-800 font-medium' : 'text-stone-500'}`}>
                   {p.name}
                 </span>
               </div>
               <div className="flex items-center gap-2.5 ml-2 shrink-0">
-                <span className="text-white/25 text-xs tabular-nums">{p.movesMade}</span>
-                <span className={`font-bold tabular-nums ${isMe ? 'text-accent-light' : 'text-white/80'}`}>
+                <span className="text-stone-300 text-xs tabular-nums">{p.movesMade}</span>
+                <span className={`font-bold tabular-nums ${isMe ? 'text-accent' : 'text-stone-700'}`}>
                   {p.score}
                 </span>
               </div>

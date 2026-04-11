@@ -38,7 +38,7 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
         <circle
           cx="24" cy="24" r={RING_R}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="rgba(0,0,0,0.06)"
           strokeWidth="3"
         />
         <circle
@@ -54,7 +54,7 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
       </svg>
       <span
         className={`font-mono text-xl font-bold tabular-nums ${
-          isLow ? 'text-red-400' : 'text-white'
+          isLow ? 'text-red-500' : 'text-stone-800'
         } ${isLow && !isPaused ? 'animate-pulse' : ''}`}
       >
         {minutes}:{secs.toString().padStart(2, '0')}

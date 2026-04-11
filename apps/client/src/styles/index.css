@@ -56,9 +56,9 @@
   }
 
   .panel {
-    @apply bg-white/[0.07] backdrop-blur-xl
-           border border-white/[0.08]
-           rounded-xl shadow-glass;
+    @apply bg-white/80 backdrop-blur-xl
+           border border-stone-200/50
+           rounded-xl shadow-card;
   }
 
   .panel-light {
@@ -67,6 +67,6 @@
   }
 
   .game-bg {
-    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: linear-gradient(to bottom right, #ecfdf5, #fffbeb);
   }
 }
