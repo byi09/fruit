@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface PlayerStatsProps {
   score: number;
@@ -10,16 +10,24 @@ interface PlayerStatsProps {
 export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsProps) {
   const clearPct = totalCells > 0 ? Math.round((score / totalCells) * 100) : 0;
 
-  const [elapsed, setElapsed] = useState(() => Math.max(0, (Date.now() - startsAt) / 1000));
+  const [elapsed, setElapsed] = useState(() => Math.max(0, (performance.now() - (startsAt - Date.now() + performance.now())) / 1000));
+  const offsetRef = useRef(startsAt - Date.now() + performance.now());
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setElapsed(Math.max(0, (Date.now() - startsAt) / 1000));
-    }, 200);
-    return () => clearInterval(id);
+    offsetRef.current = startsAt - Date.now() + performance.now();
   }, [startsAt]);
 
-  const efficiency = elapsed > 0 ? (score / elapsed).toFixed(1) : '0.0';
+  useEffect(() => {
+    let raf: number;
+    const tick = () => {
+      setElapsed(Math.max(0, (performance.now() - offsetRef.current) / 1000));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const efficiency = elapsed > 0 ? (score / elapsed).toFixed(3) : '0.000';
 
   return (
     <div className="bg-white/90 backdrop-blur rounded-xl shadow-md p-3 sm:p-4">
@@ -56,7 +64,7 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
           <div className="text-[10px] text-gray-400 uppercase">Board</div>
         </div>
         <div className="col-span-2 bg-gray-50 rounded-lg p-2 text-center">
-          <div className="text-lg font-bold text-amber-600 tabular-nums">{efficiency}</div>
+          <div className="text-xl font-bold text-amber-600 tabular-nums font-mono tracking-tight">{efficiency}</div>
           <div className="text-[10px] text-gray-400 uppercase">Apples / Second</div>
         </div>
       </div>
