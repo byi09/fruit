@@ -142,7 +142,7 @@ export default function App() {
                 myScore={myScore}
                 myMoves={myMoves}
               />
-              <PlayerStats score={myScore} moves={myMoves} totalCells={totalCells} />
+              <PlayerStats score={myScore} moves={myMoves} totalCells={totalCells} startsAt={startsAt!} />
             </div>
           </div>
         </div>

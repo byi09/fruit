@@ -1,12 +1,25 @@
+import { useEffect, useState } from 'react';
+
 interface PlayerStatsProps {
   score: number;
   moves: number;
   totalCells: number;
+  startsAt: number;
 }
 
-export function PlayerStats({ score, moves, totalCells }: PlayerStatsProps) {
+export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsProps) {
   const clearPct = totalCells > 0 ? Math.round((score / totalCells) * 100) : 0;
-  const efficiency = moves > 0 ? (score / moves).toFixed(1) : '0.0';
+
+  const [elapsed, setElapsed] = useState(() => Math.max(0, (Date.now() - startsAt) / 1000));
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsed(Math.max(0, (Date.now() - startsAt) / 1000));
+    }, 200);
+    return () => clearInterval(id);
+  }, [startsAt]);
+
+  const efficiency = elapsed > 0 ? (score / elapsed).toFixed(1) : '0.0';
 
   return (
     <div className="bg-white/90 backdrop-blur rounded-xl shadow-md p-3 sm:p-4">
@@ -44,7 +57,7 @@ export function PlayerStats({ score, moves, totalCells }: PlayerStatsProps) {
         </div>
         <div className="col-span-2 bg-gray-50 rounded-lg p-2 text-center">
           <div className="text-lg font-bold text-amber-600 tabular-nums">{efficiency}</div>
-          <div className="text-[10px] text-gray-400 uppercase">Apples / Move</div>
+          <div className="text-[10px] text-gray-400 uppercase">Apples / Second</div>
         </div>
       </div>
     </div>
