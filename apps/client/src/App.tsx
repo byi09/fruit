@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { useRoom } from './hooks/useRoom';
 import { useGame } from './hooks/useGame';
@@ -85,8 +86,12 @@ export default function App() {
     );
   }
 
+  // Mark chat visible when on playing screen
+  useEffect(() => {
+    markVisible(screen === 'playing');
+  }, [screen, markVisible]);
+
   if (screen === 'playing' && board && config && endsAt && roomState && playerId) {
-    markVisible(true);
     const totalCells = config.rows * config.cols;
     return (
       <>
