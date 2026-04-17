@@ -8,6 +8,7 @@ import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { Countdown } from './components/Countdown';
 import { GameBoard } from './components/GameBoard';
+import { BoardSwitcher } from './components/BoardSwitcher';
 import { Timer } from './components/Timer';
 import { Leaderboard } from './components/Leaderboard';
 import { Results } from './components/Results';
@@ -24,12 +25,19 @@ export default function App() {
     setScreen,
     error,
     isHost,
+    isSpectator,
     createRoom,
     joinRoom,
+    spectateRoom,
     leaveRoom,
+    consumeInitialBoards,
   } = useRoom();
   const {
     board,
+    viewedBoard,
+    viewedPlayerId,
+    setViewedPlayerId,
+    seed,
     config,
     endsAt,
     startsAt,
@@ -46,7 +54,7 @@ export default function App() {
     requestRematch,
     pauseGame,
     resumeGame,
-  } = useGame(setScreen);
+  } = useGame(setScreen, { isSpectator, roomState, consumeInitialBoards });
   const { messages, sendMessage, unreadCount, markVisible } = useChat();
 
   useEffect(() => {
@@ -66,7 +74,12 @@ export default function App() {
     return (
       <>
         {connectionBadge}
-        <Home onCreateRoom={createRoom} onJoinRoom={joinRoom} error={error} />
+        <Home
+          onCreateRoom={createRoom}
+          onJoinRoom={joinRoom}
+          onSpectateRoom={spectateRoom}
+          error={error}
+        />
       </>
     );
   }
@@ -95,8 +108,10 @@ export default function App() {
     );
   }
 
-  if (screen === 'playing' && board && config && endsAt && roomState && playerId) {
+  const playingBoard = isSpectator ? viewedBoard : board;
+  if (screen === 'playing' && playingBoard && config && endsAt && roomState && playerId) {
     const totalCells = config.rows * config.cols;
+    const viewedPlayer = viewedPlayerId ? roomState.players[viewedPlayerId] : null;
     return (
       <>
         {connectionBadge}
@@ -104,40 +119,51 @@ export default function App() {
           {/* Top bar */}
           <div className="px-3 sm:px-6 py-3 border-b border-stone-200/50 bg-white/50 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
-              {/* Left: score + moves */}
-              <div className="flex items-center gap-5">
+              {/* Left: score + moves (or spectator label) */}
+              {isSpectator ? (
                 <div>
-                  <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Score</div>
-                  <div className="text-2xl font-extrabold tabular-nums text-stone-900 leading-tight">
-                    {myScore}
+                  <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Spectating</div>
+                  <div className="text-lg font-bold text-stone-900 leading-tight">
+                    {viewedPlayer?.name ?? '—'}
                   </div>
                 </div>
-                <div>
-                  <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Moves</div>
-                  <div className="text-2xl font-extrabold tabular-nums text-stone-500 leading-tight">
-                    {myMoves}
+              ) : (
+                <div className="flex items-center gap-5">
+                  <div>
+                    <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Score</div>
+                    <div className="text-2xl font-extrabold tabular-nums text-stone-900 leading-tight">
+                      {myScore}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Moves</div>
+                    <div className="text-2xl font-extrabold tabular-nums text-stone-500 leading-tight">
+                      {myMoves}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Center: timer */}
               <Timer endsAt={endsAt} isPaused={isPaused} durationMs={config.durationMs} />
 
               {/* Right: pause + room code */}
               <div className="flex items-center gap-3">
-                <button
-                  onClick={isPaused ? resumeGame : pauseGame}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                             bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-700 border border-stone-200/60"
-                  title={isPaused ? 'Resume game' : 'Pause game'}
-                >
-                  {isPaused ? (
-                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><polygon points="4,2 14,8 4,14" /></svg>
-                  ) : (
-                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><rect x="3" y="2" width="3.5" height="12" rx="0.5" /><rect x="9.5" y="2" width="3.5" height="12" rx="0.5" /></svg>
-                  )}
-                  <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'}</span>
-                </button>
+                {!isSpectator && (
+                  <button
+                    onClick={isPaused ? resumeGame : pauseGame}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                               bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-700 border border-stone-200/60"
+                    title={isPaused ? 'Resume game' : 'Pause game'}
+                  >
+                    {isPaused ? (
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><polygon points="4,2 14,8 4,14" /></svg>
+                    ) : (
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5"><rect x="3" y="2" width="3.5" height="12" rx="0.5" /><rect x="9.5" y="2" width="3.5" height="12" rx="0.5" /></svg>
+                    )}
+                    <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'}</span>
+                  </button>
+                )}
                 <span className="text-xs font-mono text-stone-300 tracking-wider">
                   {roomState.code}
                 </span>
@@ -155,7 +181,19 @@ export default function App() {
 
               {/* Center: Board */}
               <div className="flex-1 order-1 lg:order-2">
-                <GameBoard board={board} config={config} onMove={submitMove} disabled={isPaused} />
+                {isSpectator && (
+                  <BoardSwitcher
+                    players={Object.values(roomState.players)}
+                    viewedPlayerId={viewedPlayerId}
+                    scores={scores}
+                    onSelect={setViewedPlayerId}
+                  />
+                )}
+                {isSpectator ? (
+                  <GameBoard board={playingBoard} config={config} readOnly disabled={isPaused} />
+                ) : (
+                  <GameBoard board={playingBoard} config={config} onMove={submitMove} disabled={isPaused} />
+                )}
               </div>
 
               {/* Right sidebar: Leaderboard + Stats */}
@@ -167,7 +205,9 @@ export default function App() {
                   myScore={myScore}
                   myMoves={myMoves}
                 />
-                <PlayerStats score={myScore} moves={myMoves} totalCells={totalCells} startsAt={startsAt!} />
+                {!isSpectator && (
+                  <PlayerStats score={myScore} moves={myMoves} totalCells={totalCells} startsAt={startsAt!} />
+                )}
               </div>
             </div>
           </div>
@@ -187,12 +227,14 @@ export default function App() {
               {pausedByName && (
                 <p className="text-white/50 text-sm mb-6">Paused by {pausedByName}</p>
               )}
-              <button
-                onClick={resumeGame}
-                className="btn-primary"
-              >
-                Resume
-              </button>
+              {!isSpectator && (
+                <button
+                  onClick={resumeGame}
+                  className="btn-primary"
+                >
+                  Resume
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -210,6 +252,8 @@ export default function App() {
           roundHistory={roundHistory}
           myPlayerId={playerId}
           isHost={isHost}
+          seed={seed}
+          config={config}
           onRematch={requestRematch}
           onLeave={leaveRoom}
         />

@@ -7,40 +7,43 @@ import { useSelection } from '../hooks/useSelection';
 interface GameBoardProps {
   board: Board;
   config: GameConfig;
-  onMove: (move: Move) => boolean;
+  onMove?: (move: Move) => boolean;
   disabled?: boolean;
+  readOnly?: boolean;
 }
 
-export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
+export function GameBoard({ board, config, onMove, disabled, readOnly }: GameBoardProps) {
   const gridRef = useRef<HTMLDivElement>(null);
 
+  const noop = useCallback(() => false, []);
   const { selection, selectedSet, handlePointerDown, handlePointerMove, handlePointerUp } =
-    useSelection(board, config.targetSum, onMove, gridRef);
+    useSelection(board, config.targetSum, onMove ?? noop, gridRef);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      if (disabled) return;
+      if (disabled || readOnly) return;
       e.preventDefault();
       (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
       handlePointerDown(e.clientX, e.clientY);
     },
-    [disabled, handlePointerDown],
+    [disabled, readOnly, handlePointerDown],
   );
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (disabled) return;
+      if (disabled || readOnly) return;
       handlePointerMove(e.clientX, e.clientY);
     },
-    [disabled, handlePointerMove],
+    [disabled, readOnly, handlePointerMove],
   );
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent) => {
+      if (readOnly) return;
       (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
       handlePointerUp();
     },
-    [handlePointerUp],
+    [readOnly, handlePointerUp],
   );
 
   return (
@@ -52,22 +55,22 @@ export function GameBoard({ board, config, onMove, disabled }: GameBoardProps) {
           gridTemplateColumns: `repeat(${config.cols}, 1fr)`,
           gridTemplateRows: `repeat(${config.rows}, 1fr)`,
         }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        onPointerDown={readOnly ? undefined : onPointerDown}
+        onPointerMove={readOnly ? undefined : onPointerMove}
+        onPointerUp={readOnly ? undefined : onPointerUp}
+        onPointerCancel={readOnly ? undefined : onPointerUp}
       >
         {board.map((row, r) =>
           row.map((cell, c) => (
             <CellView
               key={`${r}-${c}`}
               cell={cell}
-              selected={selectedSet.has(`${r},${c}`)}
+              selected={!readOnly && selectedSet.has(`${r},${c}`)}
             />
           )),
         )}
 
-        {selection.isDragging && selection.rect && (
+        {!readOnly && selection.isDragging && selection.rect && (
           <SelectionOverlay rect={selection.rect} />
         )}
       </div>

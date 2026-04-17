@@ -58,11 +58,22 @@ export class RoomManager {
     return { room, player };
   }
 
-  joinRoom(roomCode: string, playerName: string, socketId: string): { room: RoomState; player: PlayerState } | { error: string } {
+  joinRoom(
+    roomCode: string,
+    playerName: string,
+    socketId: string,
+    isSpectator = false,
+  ): { room: RoomState; player: PlayerState } | { error: string } {
     const room = this.rooms.get(roomCode);
     if (!room) return { error: 'Room not found' };
-    if (room.status !== RoomStatus.LOBBY) return { error: 'Game already in progress' };
-    if (Object.keys(room.players).length >= MAX_PLAYERS_PER_ROOM) return { error: 'Room is full' };
+
+    if (!isSpectator) {
+      if (room.status !== RoomStatus.LOBBY) return { error: 'Game already in progress' };
+      const activeCount = Object.values(room.players).filter((p) => !p.isSpectator).length;
+      if (activeCount >= MAX_PLAYERS_PER_ROOM) return { error: 'Room is full' };
+    } else if (room.status === RoomStatus.FINISHED) {
+      return { error: 'Game has ended' };
+    }
 
     const playerId = uuidv4();
     const player: PlayerState = {
@@ -72,6 +83,7 @@ export class RoomManager {
       connected: true,
       score: 0,
       movesMade: 0,
+      isSpectator: isSpectator || undefined,
     };
 
     room.players[playerId] = player;
@@ -101,10 +113,11 @@ export class RoomManager {
       return;
     }
 
-    // Promote new host if the host left
+    // Promote new host if the host left (never promote a spectator)
     if (room.hostPlayerId === playerId) {
-      const connectedPlayers = Object.values(room.players).filter((p) => p.connected);
-      const newHost = connectedPlayers[0] || Object.values(room.players)[0];
+      const activePlayers = Object.values(room.players).filter((p) => !p.isSpectator);
+      const connectedActive = activePlayers.filter((p) => p.connected);
+      const newHost = connectedActive[0] || activePlayers[0];
       if (newHost) {
         room.hostPlayerId = newHost.id;
       }
@@ -131,11 +144,11 @@ export class RoomManager {
     const room = this.rooms.get(roomCode);
     if (!room) return null;
 
-    const connectedPlayers = Object.values(room.players).filter((p) => p.connected);
-    if (connectedPlayers.length === 0) return null;
+    const connectedActive = Object.values(room.players).filter((p) => p.connected && !p.isSpectator);
+    if (connectedActive.length === 0) return null;
 
-    room.hostPlayerId = connectedPlayers[0].id;
-    return connectedPlayers[0].id;
+    room.hostPlayerId = connectedActive[0].id;
+    return connectedActive[0].id;
   }
 
   resetForRematch(roomCode: string): void {

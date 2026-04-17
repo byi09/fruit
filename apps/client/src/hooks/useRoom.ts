@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { RoomState, PlayerState } from '@fruitbox/shared';
+import type { Board, RoomState, PlayerState } from '@fruitbox/shared';
 import { socket } from '../socket';
 
 export type Screen = 'home' | 'lobby' | 'countdown' | 'playing' | 'results';
@@ -10,6 +10,7 @@ export function useRoom() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [screen, setScreen] = useState<Screen>('home');
   const [error, setError] = useState<string | null>(null);
+  const [initialBoards, setInitialBoards] = useState<Record<string, Board> | null>(null);
 
   // Try reconnect on mount
   useEffect(() => {
@@ -20,6 +21,7 @@ export function useRoom() {
           setSessionToken(token);
           setPlayerId(res.playerId);
           setRoomState(res.roomState);
+          if (res.boards) setInitialBoards(res.boards);
 
           const status = res.roomState.status;
           if (status === 'lobby') setScreen('lobby');
@@ -139,16 +141,50 @@ export function useRoom() {
     });
   }, []);
 
+  const spectateRoom = useCallback((roomCode: string, playerName: string) => {
+    setError(null);
+    socket.emit(
+      'room:join',
+      { roomCode: roomCode.toUpperCase(), playerName, asSpectator: true },
+      (res) => {
+        if (res.ok) {
+          setPlayerId(res.playerId);
+          setSessionToken(res.sessionToken);
+          setRoomState(res.roomState);
+          if (res.boards) setInitialBoards(res.boards);
+          sessionStorage.setItem('fruitbox_session', res.sessionToken);
+
+          const status = res.roomState.status;
+          if (status === 'lobby') setScreen('lobby');
+          else if (status === 'countdown') setScreen('countdown');
+          else if (status === 'playing') setScreen('playing');
+          else if (status === 'finished') setScreen('results');
+          else setScreen('lobby');
+        } else {
+          setError(res.error);
+        }
+      },
+    );
+  }, []);
+
+  const consumeInitialBoards = useCallback(() => {
+    const b = initialBoards;
+    if (b) setInitialBoards(null);
+    return b;
+  }, [initialBoards]);
+
   const leaveRoom = useCallback(() => {
     socket.emit('room:leave');
     setRoomState(null);
     setPlayerId(null);
     setSessionToken(null);
+    setInitialBoards(null);
     setScreen('home');
     sessionStorage.removeItem('fruitbox_session');
   }, []);
 
   const isHost = roomState?.hostPlayerId === playerId;
+  const isSpectator = !!(playerId && roomState?.players[playerId]?.isSpectator);
 
   return {
     roomState,
@@ -159,8 +195,11 @@ export function useRoom() {
     error,
     setError,
     isHost,
+    isSpectator,
     createRoom,
     joinRoom,
+    spectateRoom,
     leaveRoom,
+    consumeInitialBoards,
   };
 }

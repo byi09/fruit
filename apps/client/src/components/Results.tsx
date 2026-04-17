@@ -1,4 +1,8 @@
-import type { StandingEntry, RoundResult } from '@fruitbox/shared';
+import { useState, useCallback } from 'react';
+import type { StandingEntry, RoundResult, GameConfig } from '@fruitbox/shared';
+import { generateBoard } from '@fruitbox/shared';
+import { useSolver } from '../hooks/useSolver';
+import { ReplayViewer } from './ReplayViewer';
 
 interface ResultsProps {
   standings: StandingEntry[];
@@ -6,6 +10,8 @@ interface ResultsProps {
   roundHistory: RoundResult[];
   myPlayerId: string;
   isHost: boolean;
+  seed: number | null;
+  config: GameConfig | null;
   onRematch: () => void;
   onLeave: () => void;
 }
@@ -23,11 +29,25 @@ export function Results({
   roundHistory,
   myPlayerId,
   isHost,
+  seed,
+  config,
   onRematch,
   onLeave,
 }: ResultsProps) {
   const winner = standings[0];
   const isWinner = winner?.playerId === myPlayerId;
+  const { solution, isRunning, startSolve } = useSolver();
+  const [showReplay, setShowReplay] = useState(false);
+
+  const handleSolve = useCallback(() => {
+    if (seed == null || !config) return;
+    if (solution) {
+      setShowReplay(true);
+      return;
+    }
+    const initialBoard = generateBoard(seed, config.rows, config.cols);
+    startSolve(initialBoard, config.targetSum);
+  }, [seed, config, solution, startSolve]);
 
   const playerIds = standings.map((s) => s.playerId);
   const playerNames: Record<string, string> = {};
@@ -157,6 +177,49 @@ export function Results({
           <div className="mb-4 px-3 py-2.5 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-600">
             Tie broken by: fewer moves, then earliest final move.
           </div>
+        )}
+
+        {/* Best Solution */}
+        {seed != null && config && (
+          <div className="mb-4">
+            <button
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
+                         bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/60
+                         transition-all disabled:opacity-50"
+              onClick={handleSolve}
+              disabled={isRunning}
+            >
+              {isRunning ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  Solving... {solution ? `(${solution.totalCleared} cleared so far)` : ''}
+                </>
+              ) : solution ? (
+                <>
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                    <polygon points="4,2 14,8 4,14" />
+                  </svg>
+                  Watch Replay — {solution.totalCleared}/{config.rows * config.cols} cleared
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                    <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2zm-.5 2.5v4l3.5 2-.5.86-4-2.36V4.5h1z"/>
+                  </svg>
+                  Show Best Solution
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {showReplay && solution && seed != null && config && (
+          <ReplayViewer
+            initialBoard={generateBoard(seed, config.rows, config.cols)}
+            config={config}
+            solution={solution}
+            onClose={() => setShowReplay(false)}
+          />
         )}
 
         {/* Actions */}

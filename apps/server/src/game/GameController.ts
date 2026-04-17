@@ -27,7 +27,7 @@ export class GameController {
     if (!room) return { ok: false, error: 'Room not found' };
     if (room.status !== RoomStatus.LOBBY) return { ok: false, error: 'Game already in progress' };
 
-    const connectedPlayers = Object.values(room.players).filter((p) => p.connected);
+    const connectedPlayers = Object.values(room.players).filter((p) => p.connected && !p.isSpectator);
     if (connectedPlayers.length < 1) return { ok: false, error: 'Not enough players' };
 
     // Generate seed and set countdown
@@ -57,9 +57,10 @@ export class GameController {
     room.gameStartedAt = Date.now();
     room.gameEndsAt = room.gameStartedAt + room.config.durationMs;
 
-    // Create shadow boards for all players
+    // Create shadow boards for active players only (spectators have no board)
     const boards = new Map<string, PlayerBoard>();
-    for (const playerId of Object.keys(room.players)) {
+    for (const [playerId, player] of Object.entries(room.players)) {
+      if (player.isSpectator) continue;
       boards.set(
         playerId,
         new PlayerBoard(room.seed, room.config.rows, room.config.cols, room.config.targetSum),
@@ -134,6 +135,11 @@ export class GameController {
       return { valid: false, cellsCleared: 0, reason: 'sum_not_target' };
     }
 
+    // Spectators cannot make moves
+    if (room.players[playerId]?.isSpectator) {
+      return { valid: false, cellsCleared: 0, reason: 'sum_not_target' };
+    }
+
     // Check if game time has elapsed (in case timer hasn't fired yet)
     if (room.gameEndsAt && Date.now() > room.gameEndsAt) {
       return { valid: false, cellsCleared: 0, reason: 'sum_not_target' };
@@ -159,6 +165,13 @@ export class GameController {
           playerId,
           score: player.score,
           movesMade: player.movesMade,
+        });
+
+        // Broadcast the post-move board snapshot so spectators can render it.
+        this.io.to(roomCode).emit('game:board_update', {
+          playerId,
+          board: playerBoard.getBoard(),
+          lastMove: move,
         });
       }
     }
@@ -227,7 +240,9 @@ export class GameController {
     const room = this.roomManager.getRoom(roomCode);
     if (!room) return;
 
-    const allDisconnected = Object.values(room.players).every((p) => !p.connected);
+    const activePlayers = Object.values(room.players).filter((p) => !p.isSpectator);
+    const allDisconnected =
+      activePlayers.length > 0 && activePlayers.every((p) => !p.connected);
     if (allDisconnected && room.status === RoomStatus.PLAYING) {
       this.endGame(roomCode);
     }

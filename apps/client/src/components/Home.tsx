@@ -3,13 +3,14 @@ import { useState } from 'react';
 interface HomeProps {
   onCreateRoom: (playerName: string) => void;
   onJoinRoom: (roomCode: string, playerName: string) => void;
+  onSpectateRoom: (roomCode: string, playerName: string) => void;
   error: string | null;
 }
 
-export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
+export function Home({ onCreateRoom, onJoinRoom, onSpectateRoom, error }: HomeProps) {
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('fruitbox_name') || '');
   const [roomCode, setRoomCode] = useState('');
-  const [mode, setMode] = useState<'menu' | 'join'>('menu');
+  const [mode, setMode] = useState<'menu' | 'join' | 'spectate'>('menu');
 
   const saveName = (name: string) => {
     setPlayerName(name);
@@ -24,6 +25,11 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
   const handleJoin = () => {
     if (!playerName.trim() || !roomCode.trim()) return;
     onJoinRoom(roomCode.trim(), playerName.trim());
+  };
+
+  const handleSpectate = () => {
+    if (!playerName.trim() || !roomCode.trim()) return;
+    onSpectateRoom(roomCode.trim(), playerName.trim());
   };
 
   return (
@@ -80,6 +86,13 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
               >
                 Join Room
               </button>
+              <button
+                className="btn-ghost w-full"
+                onClick={() => setMode('spectate')}
+                disabled={!playerName.trim()}
+              >
+                Spectate Room
+              </button>
             </div>
           ) : (
             <div className="space-y-3 animate-fade-in-fast">
@@ -99,13 +112,23 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
                   autoFocus
                 />
               </div>
-              <button
-                className="btn-primary w-full"
-                onClick={handleJoin}
-                disabled={!playerName.trim() || roomCode.length !== 4}
-              >
-                Join Game
-              </button>
+              {mode === 'join' ? (
+                <button
+                  className="btn-primary w-full"
+                  onClick={handleJoin}
+                  disabled={!playerName.trim() || roomCode.length !== 4}
+                >
+                  Join Game
+                </button>
+              ) : (
+                <button
+                  className="btn-primary w-full"
+                  onClick={handleSpectate}
+                  disabled={!playerName.trim() || roomCode.length !== 4}
+                >
+                  Spectate
+                </button>
+              )}
               <button
                 className="btn-ghost w-full text-sm"
                 onClick={() => setMode('menu')}

@@ -15,7 +15,9 @@ const AVATAR_COLORS = [
 ];
 
 export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave }: LobbyProps) {
-  const players = Object.values(roomState.players);
+  const allPlayers = Object.values(roomState.players);
+  const players = allPlayers.filter((p) => !p.isSpectator);
+  const spectators = allPlayers.filter((p) => p.isSpectator);
   const roomCode = roomState.code;
   const [copied, setCopied] = useState(false);
 
@@ -81,6 +83,31 @@ export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave }: Lob
             ))}
           </div>
         </div>
+
+        {spectators.length > 0 && (
+          <div className="panel-light p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xs font-medium text-stone-400 uppercase tracking-wider">
+                Spectators
+              </h2>
+              <span className="text-xs tabular-nums text-stone-400">{spectators.length}</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {spectators.map((p) => (
+                <span
+                  key={p.id}
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${
+                    p.id === playerId ? 'bg-accent/[0.06] text-stone-800' : 'bg-stone-100 text-stone-600'
+                  } ${!p.connected ? 'opacity-40' : ''}`}
+                >
+                  <div className={`w-1 h-1 rounded-full ${p.connected ? 'bg-emerald-400' : 'bg-stone-300'}`} />
+                  {p.name}
+                  {p.id === playerId && <span className="text-stone-400">(you)</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!isHost && (
           <div className="text-center mb-4">

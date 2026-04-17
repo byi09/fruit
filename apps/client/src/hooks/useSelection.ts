@@ -50,16 +50,22 @@ export function useSelection(
       const cellW = gridRect.width / cols;
       const cellH = gridRect.height / rows;
 
-      const startCol = Math.floor(rect.x / cellW);
-      const startRow = Math.floor(rect.y / cellH);
-      const endCol = Math.floor((rect.x + rect.width - 1) / cellW);
-      const endRow = Math.floor((rect.y + rect.height - 1) / cellH);
+      const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max));
+
+      // Map both endpoints of the drag to cells directly. Using rect.width-1
+      // pushes a zero-size endpoint into the previous cell, so a thin
+      // horizontal/vertical drag would collapse to a single row/col; the
+      // epsilon below keeps a positive endpoint inside its own cell without
+      // spilling past cell boundaries.
+      const eps = 1e-4;
+      const endPx = rect.x + Math.max(0, rect.width - eps);
+      const endPy = rect.y + Math.max(0, rect.height - eps);
 
       return normalizeMove({
-        startRow: Math.max(0, Math.min(startRow, rows - 1)),
-        startCol: Math.max(0, Math.min(startCol, cols - 1)),
-        endRow: Math.max(0, Math.min(endRow, rows - 1)),
-        endCol: Math.max(0, Math.min(endCol, cols - 1)),
+        startRow: clamp(Math.floor(rect.y / cellH), rows - 1),
+        startCol: clamp(Math.floor(rect.x / cellW), cols - 1),
+        endRow: clamp(Math.floor(endPy / cellH), rows - 1),
+        endCol: clamp(Math.floor(endPx / cellW), cols - 1),
       });
     },
     [board, gridRef],
@@ -98,7 +104,10 @@ export function useSelection(
     const rect = selection.rect;
     startPoint.current = null;
 
-    if (rect && rect.width > 2 && rect.height > 2) {
+    // Allow thin-line drags: either dimension meaningful is enough. Requiring
+    // both would drop a purely horizontal/vertical drag (the other dim is ~0).
+    const MIN_DRAG_PX = 4;
+    if (rect && (rect.width >= MIN_DRAG_PX || rect.height >= MIN_DRAG_PX)) {
       const move = getCellsInRect(rect);
       if (move) {
         onCommit(move);

@@ -1,7 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { RoomStatus, RECONNECT_GRACE_MS } from '@fruitbox/shared';
-import type { ClientEvents, ServerEvents } from '@fruitbox/shared';
+import type { Board, ClientEvents, ServerEvents, RoomState } from '@fruitbox/shared';
 import type { RoomManager } from '../rooms/RoomManager.js';
 import type { GameController } from '../game/GameController.js';
 import type { SessionStore } from './sessionStore.js';
@@ -38,7 +38,7 @@ export function registerHandlers(
 
   // --- Room: Join ---
   socket.on('room:join', (payload, ack) => {
-    const { roomCode, playerName } = payload;
+    const { roomCode, playerName, asSpectator } = payload;
     if (!playerName || playerName.trim().length === 0) {
       return ack({ ok: false, error: 'Player name is required' });
     }
@@ -46,7 +46,12 @@ export function registerHandlers(
       return ack({ ok: false, error: 'Room code is required' });
     }
 
-    const result = roomManager.joinRoom(roomCode.toUpperCase(), playerName.trim(), socket.id);
+    const result = roomManager.joinRoom(
+      roomCode.toUpperCase(),
+      playerName.trim(),
+      socket.id,
+      !!asSpectator,
+    );
     if ('error' in result) {
       return ack({ ok: false, error: result.error });
     }
@@ -61,7 +66,8 @@ export function registerHandlers(
     // Notify others
     socket.to(room.code).emit('room:player_joined', player);
 
-    ack({ ok: true, playerId: player.id, sessionToken, roomState: room });
+    const boards = player.isSpectator ? collectActiveBoards(room, gameController) : undefined;
+    ack({ ok: true, playerId: player.id, sessionToken, roomState: room, boards });
   });
 
   // --- Room: Reconnect ---
@@ -93,13 +99,19 @@ export function registerHandlers(
     socket.join(roomCode);
 
     // Get board if game is in progress
-    const playerBoard = gameController.getPlayerBoard(roomCode, playerId);
+    const reconnectingPlayer = room.players[playerId];
+    const playerBoard = reconnectingPlayer?.isSpectator
+      ? undefined
+      : gameController.getPlayerBoard(roomCode, playerId);
     const board = playerBoard?.getBoard();
+    const boards = reconnectingPlayer?.isSpectator
+      ? collectActiveBoards(room, gameController)
+      : undefined;
 
     // Notify others
     socket.to(roomCode).emit('room:player_reconnected', { playerId });
 
-    ack({ ok: true, playerId, roomState: room, board });
+    ack({ ok: true, playerId, roomState: room, board, boards });
   });
 
   // --- Room: Leave ---
@@ -107,10 +119,18 @@ export function registerHandlers(
     handlePlayerLeave(socket, roomManager, gameController, sessionStore, io);
   });
 
+  function isSpectatorSocket(): boolean {
+    const mapping = socketToPlayer.get(socket.id);
+    if (!mapping) return false;
+    const room = roomManager.getRoom(mapping.roomCode);
+    return !!room?.players[mapping.playerId]?.isSpectator;
+  }
+
   // --- Game: Start ---
   socket.on('game:start', (ack) => {
     const mapping = socketToPlayer.get(socket.id);
     if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+    if (isSpectatorSocket()) return ack({ ok: false, error: 'Spectators cannot start the game' });
 
     const room = roomManager.getRoom(mapping.roomCode);
     if (!room) return ack({ ok: false, error: 'Room not found' });
@@ -124,6 +144,7 @@ export function registerHandlers(
   socket.on('game:move', (payload, ack) => {
     const mapping = socketToPlayer.get(socket.id);
     if (!mapping) return ack({ valid: false, cellsCleared: 0, reason: 'sum_not_target' });
+    if (isSpectatorSocket()) return ack({ valid: false, cellsCleared: 0, reason: 'sum_not_target' });
 
     const result = gameController.processMove(mapping.roomCode, mapping.playerId, payload);
     ack(result);
@@ -133,6 +154,7 @@ export function registerHandlers(
   socket.on('game:rematch', (ack) => {
     const mapping = socketToPlayer.get(socket.id);
     if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+    if (isSpectatorSocket()) return ack({ ok: false, error: 'Spectators cannot trigger a rematch' });
 
     const room = roomManager.getRoom(mapping.roomCode);
     if (!room) return ack({ ok: false, error: 'Room not found' });
@@ -146,6 +168,7 @@ export function registerHandlers(
   socket.on('game:pause', (ack) => {
     const mapping = socketToPlayer.get(socket.id);
     if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+    if (isSpectatorSocket()) return ack({ ok: false, error: 'Spectators cannot pause the game' });
 
     const result = gameController.pauseGame(mapping.roomCode, mapping.playerId);
     ack(result);
@@ -155,6 +178,7 @@ export function registerHandlers(
   socket.on('game:resume', (ack) => {
     const mapping = socketToPlayer.get(socket.id);
     if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+    if (isSpectatorSocket()) return ack({ ok: false, error: 'Spectators cannot resume the game' });
 
     const result = gameController.resumeGame(mapping.roomCode, mapping.playerId);
     ack(result);
@@ -241,6 +265,22 @@ export function registerHandlers(
     }, RECONNECT_GRACE_MS);
     disconnectTimers.set(timerKey, graceTimer);
   });
+}
+
+function collectActiveBoards(
+  room: RoomState,
+  gameController: GameController,
+): Record<string, Board> | undefined {
+  if (room.status !== RoomStatus.PLAYING && room.status !== RoomStatus.PAUSED) {
+    return undefined;
+  }
+  const boards: Record<string, Board> = {};
+  for (const [pid, p] of Object.entries(room.players)) {
+    if (p.isSpectator) continue;
+    const pb = gameController.getPlayerBoard(room.code, pid);
+    if (pb) boards[pid] = pb.getBoard();
+  }
+  return Object.keys(boards).length > 0 ? boards : undefined;
 }
 
 function handlePlayerLeave(

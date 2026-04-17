@@ -17,14 +17,16 @@ export function compareStandings(a: StandingEntry, b: StandingEntry): number {
  * Computes final standings from player states.
  */
 export function computeStandings(players: Record<string, PlayerState>): StandingEntry[] {
-  const entries: StandingEntry[] = Object.values(players).map((p) => ({
-    playerId: p.id,
-    playerName: p.name,
-    score: p.score,
-    movesMade: p.movesMade,
-    lastMoveAt: p.lastMoveAt ?? Infinity,
-    rank: 0,
-  }));
+  const entries: StandingEntry[] = Object.values(players)
+    .filter((p) => !p.isSpectator)
+    .map((p) => ({
+      playerId: p.id,
+      playerName: p.name,
+      score: p.score,
+      movesMade: p.movesMade,
+      lastMoveAt: p.lastMoveAt ?? Infinity,
+      rank: 0,
+    }));
 
   entries.sort(compareStandings);
   entries.forEach((e, i) => {

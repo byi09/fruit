@@ -15,3 +15,8 @@ export { validateMove, applyMove, normalizeMove, getRectangleSum } from './board
 
 // Scoring
 export { compareStandings, computeStandings } from './scoring.js';
+
+// Solver
+export type { SolverSolution, SolverOptions } from './solver/types.js';
+export { findAllValidMoves, countUncleared, cloneBoard, applyMoveMut } from './solver/enumerate.js';
+export { solveBoardGreedy, solveBoardBeam } from './solver/solver.js';

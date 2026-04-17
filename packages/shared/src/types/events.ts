@@ -19,13 +19,13 @@ export interface ClientEvents {
   ) => void;
 
   'room:join': (
-    payload: { roomCode: string; playerName: string },
-    ack: (res: { ok: true; playerId: string; sessionToken: string; roomState: RoomState } | { ok: false; error: string }) => void,
+    payload: { roomCode: string; playerName: string; asSpectator?: boolean },
+    ack: (res: { ok: true; playerId: string; sessionToken: string; roomState: RoomState; boards?: Record<string, Board> } | { ok: false; error: string }) => void,
   ) => void;
 
   'room:reconnect': (
     payload: { sessionToken: string },
-    ack: (res: { ok: true; playerId: string; roomState: RoomState; board?: Board } | { ok: false; error: string }) => void,
+    ack: (res: { ok: true; playerId: string; roomState: RoomState; board?: Board; boards?: Record<string, Board> } | { ok: false; error: string }) => void,
   ) => void;
 
   'room:leave': () => void;
@@ -73,6 +73,7 @@ export interface ServerEvents {
   'game:countdown': (payload: { startsAt: number }) => void;
   'game:started': (payload: { seed: number; endsAt: number; config: GameConfig }) => void;
   'game:score_update': (payload: { playerId: string; score: number; movesMade: number }) => void;
+  'game:board_update': (payload: { playerId: string; board: Board; lastMove?: Move }) => void;
   'game:finished': (payload: { standings: StandingEntry[]; roundNumber: number; roundHistory: RoundResult[] }) => void;
   'game:rematch_starting': (payload: { seed: number; startsAt: number }) => void;
   'game:paused': (payload: { pausedBy: string; playerName: string }) => void;

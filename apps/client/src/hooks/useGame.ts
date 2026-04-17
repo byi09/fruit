@@ -5,6 +5,7 @@ import {
   type GameConfig,
   type StandingEntry,
   type RoundResult,
+  type RoomState,
   generateBoard,
   validateMove,
   applyMove,
@@ -18,7 +19,14 @@ interface ScoreInfo {
   movesMade: number;
 }
 
-export function useGame(setScreen: (s: Screen) => void) {
+interface UseGameOptions {
+  isSpectator: boolean;
+  roomState: RoomState | null;
+  consumeInitialBoards: () => Record<string, Board> | null;
+}
+
+export function useGame(setScreen: (s: Screen) => void, options: UseGameOptions) {
+  const { isSpectator, roomState, consumeInitialBoards } = options;
   const [board, setBoard] = useState<Board | null>(null);
   const [config, setConfig] = useState<GameConfig | null>(null);
   const [endsAt, setEndsAt] = useState<number | null>(null);
@@ -32,7 +40,23 @@ export function useGame(setScreen: (s: Screen) => void) {
   const [lastClear, setLastClear] = useState<{ row: number; col: number; count: number } | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [pausedByName, setPausedByName] = useState<string | null>(null);
+  const [seed, setSeed] = useState<number | null>(null);
+  const [playerBoards, setPlayerBoards] = useState<Record<string, Board>>({});
+  const [viewedPlayerId, setViewedPlayerId] = useState<string | null>(null);
   const boardRef = useRef<Board | null>(null);
+  const roomStateRef = useRef<RoomState | null>(roomState);
+  const isSpectatorRef = useRef(isSpectator);
+  const consumeInitialBoardsRef = useRef(consumeInitialBoards);
+
+  useEffect(() => {
+    roomStateRef.current = roomState;
+  }, [roomState]);
+  useEffect(() => {
+    isSpectatorRef.current = isSpectator;
+  }, [isSpectator]);
+  useEffect(() => {
+    consumeInitialBoardsRef.current = consumeInitialBoards;
+  }, [consumeInitialBoards]);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -50,6 +74,7 @@ export function useGame(setScreen: (s: Screen) => void) {
       setBoard(newBoard);
       boardRef.current = newBoard;
       setConfig(data.config);
+      setSeed(data.seed);
       setEndsAt(data.endsAt);
       setMyScore(0);
       setMyMoves(0);
@@ -57,7 +82,27 @@ export function useGame(setScreen: (s: Screen) => void) {
       setStandings(null);
       setIsPaused(false);
       setPausedByName(null);
+
+      if (isSpectatorRef.current) {
+        const rs = roomStateRef.current;
+        const activeIds = rs
+          ? Object.values(rs.players)
+              .filter((p) => !p.isSpectator)
+              .map((p) => p.id)
+          : [];
+        const boards: Record<string, Board> = {};
+        for (const pid of activeIds) {
+          boards[pid] = generateBoard(data.seed, data.config.rows, data.config.cols);
+        }
+        setPlayerBoards(boards);
+        setViewedPlayerId((prev) => (prev && boards[prev] ? prev : activeIds[0] ?? null));
+      }
+
       setScreen('playing');
+    }
+
+    function onBoardUpdate(data: { playerId: string; board: Board }) {
+      setPlayerBoards((prev) => ({ ...prev, [data.playerId]: data.board }));
     }
 
     function onScoreUpdate(data: { playerId: string; score: number; movesMade: number }) {
@@ -93,6 +138,7 @@ export function useGame(setScreen: (s: Screen) => void) {
     socket.on('game:finished', onGameFinished);
     socket.on('game:paused', onGamePaused);
     socket.on('game:resumed', onGameResumed);
+    socket.on('game:board_update', onBoardUpdate);
 
     return () => {
       socket.off('game:countdown', onCountdown);
@@ -101,8 +147,28 @@ export function useGame(setScreen: (s: Screen) => void) {
       socket.off('game:finished', onGameFinished);
       socket.off('game:paused', onGamePaused);
       socket.off('game:resumed', onGameResumed);
+      socket.off('game:board_update', onBoardUpdate);
     };
   }, [setScreen]);
+
+  // When a spectator joins mid-game, the join ack includes a snapshot of each
+  // active player's board. Hydrate playerBoards from that snapshot so the
+  // spectator sees the current state, not the initial seed-generated board.
+  useEffect(() => {
+    if (!isSpectator || !roomState) return;
+    const snap = consumeInitialBoardsRef.current();
+    if (!snap) return;
+    setPlayerBoards((prev) => ({ ...prev, ...snap }));
+    setViewedPlayerId((prev) => {
+      if (prev && snap[prev]) return prev;
+      const firstId = Object.keys(snap)[0];
+      return firstId ?? prev;
+    });
+    // Also hydrate config/endsAt so the playing screen renders.
+    setConfig((prev) => prev ?? (roomState.config ?? null));
+    setEndsAt((prev) => prev ?? (roomState.gameEndsAt ?? null));
+    setSeed((prev) => prev ?? (roomState.seed || null));
+  }, [isSpectator, roomState]);
 
   const startGame = useCallback(() => {
     socket.emit('game:start', (res) => {
@@ -113,6 +179,7 @@ export function useGame(setScreen: (s: Screen) => void) {
   }, []);
 
   const submitMove = useCallback((move: Move): boolean => {
+    if (isSpectatorRef.current) return false;
     const currentBoard = boardRef.current;
     if (!currentBoard || !config) return false;
 
@@ -170,8 +237,15 @@ export function useGame(setScreen: (s: Screen) => void) {
     boardRef.current = restoredBoard;
   }, []);
 
+  const viewedBoard = viewedPlayerId ? playerBoards[viewedPlayerId] ?? null : null;
+
   return {
     board,
+    viewedBoard,
+    playerBoards,
+    viewedPlayerId,
+    setViewedPlayerId,
+    seed,
     config,
     endsAt,
     startsAt,

@@ -7,4 +7,5 @@ export interface PlayerState {
   movesMade: number;
   lastMoveAt?: number;
   disconnectedAt?: number;
+  isSpectator?: boolean;
 }
