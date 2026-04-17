@@ -261,18 +261,20 @@ function ScoreChart({
   playerColors: Record<string, string>;
   myPlayerId: string;
 }) {
-  const chartWidth = 500;
+  const VISIBLE_ROUNDS = 5;
+  const GROUP_WIDTH = 80;
   const chartHeight = 160;
   const paddingLeft = 32;
   const paddingBottom = 24;
   const paddingTop = 8;
   const paddingRight = 8;
 
-  const plotW = chartWidth - paddingLeft - paddingRight;
-  const plotH = chartHeight - paddingTop - paddingBottom;
-
-  const numRounds = roundHistory.length;
+  const numRounds = Math.max(roundHistory.length, 1);
   const numPlayers = playerIds.length;
+
+  const plotW = GROUP_WIDTH * numRounds;
+  const chartWidth = paddingLeft + plotW + paddingRight;
+  const plotH = chartHeight - paddingTop - paddingBottom;
 
   let maxScore = 0;
   for (const round of roundHistory) {
@@ -282,9 +284,10 @@ function ScoreChart({
   }
   if (maxScore === 0) maxScore = 1;
 
-  const groupWidth = plotW / numRounds;
+  const groupWidth = GROUP_WIDTH;
   const barWidth = Math.min(20, (groupWidth * 0.7) / numPlayers);
   const groupBarWidth = barWidth * numPlayers;
+  const scrolls = roundHistory.length > VISIBLE_ROUNDS;
 
   const scoreMap: Record<number, Record<string, number>> = {};
   roundHistory.forEach((round, i) => {
@@ -297,7 +300,13 @@ function ScoreChart({
   return (
     <div>
       <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-2">Per Round</h4>
-      <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full" style={{ maxHeight: 180 }}>
+      <div className={scrolls ? 'overflow-x-auto' : ''}>
+      <svg
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        width={chartWidth}
+        height={chartHeight}
+        style={{ maxHeight: 180, display: 'block' }}
+      >
         {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
           const y = paddingTop + plotH * (1 - frac);
           const val = Math.round(maxScore * frac);
@@ -342,6 +351,7 @@ function ScoreChart({
           );
         })}
       </svg>
+      </div>
 
       <div className="flex flex-wrap gap-3 mt-2 justify-center">
         {playerIds.map((id) => (

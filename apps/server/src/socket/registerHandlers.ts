@@ -38,7 +38,7 @@ export function registerHandlers(
 
   // --- Room: Join ---
   socket.on('room:join', (payload, ack) => {
-    const { roomCode, playerName, asSpectator } = payload;
+    const { roomCode, playerName } = payload;
     if (!playerName || playerName.trim().length === 0) {
       return ack({ ok: false, error: 'Player name is required' });
     }
@@ -46,12 +46,7 @@ export function registerHandlers(
       return ack({ ok: false, error: 'Room code is required' });
     }
 
-    const result = roomManager.joinRoom(
-      roomCode.toUpperCase(),
-      playerName.trim(),
-      socket.id,
-      !!asSpectator,
-    );
+    const result = roomManager.joinRoom(roomCode.toUpperCase(), playerName.trim(), socket.id);
     if ('error' in result) {
       return ack({ ok: false, error: result.error });
     }
@@ -66,6 +61,8 @@ export function registerHandlers(
     // Notify others
     socket.to(room.code).emit('room:player_joined', player);
 
+    // If the server auto-flagged the joiner as a spectator (mid-game join),
+    // include a snapshot of every active player's board so they can render.
     const boards = player.isSpectator ? collectActiveBoards(room, gameController) : undefined;
     ack({ ok: true, playerId: player.id, sessionToken, roomState: room, boards });
   });

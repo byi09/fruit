@@ -49,14 +49,21 @@ describe('RoomManager', () => {
       }
     });
 
-    it('rejects joining room not in lobby', () => {
+    it('auto-flags spectator when joining a room mid-game', () => {
       const { room } = rm.createRoom('Alice', 's1');
       room.status = RoomStatus.PLAYING;
       const result = rm.joinRoom(room.code, 'Bob', 's2');
-      expect('error' in result).toBe(true);
-      if ('error' in result) {
-        expect(result.error).toBe('Game already in progress');
+      expect('error' in result).toBe(false);
+      if (!('error' in result)) {
+        expect(result.player.isSpectator).toBe(true);
       }
+    });
+
+    it('rejects joining a finished room', () => {
+      const { room } = rm.createRoom('Alice', 's1');
+      room.status = RoomStatus.FINISHED;
+      const result = rm.joinRoom(room.code, 'Bob', 's2');
+      expect('error' in result).toBe(true);
     });
   });
 

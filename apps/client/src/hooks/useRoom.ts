@@ -133,38 +133,21 @@ export function useRoom() {
         setPlayerId(res.playerId);
         setSessionToken(res.sessionToken);
         setRoomState(res.roomState);
-        setScreen('lobby');
+        if (res.boards) setInitialBoards(res.boards);
         sessionStorage.setItem('fruitbox_session', res.sessionToken);
+
+        // If the room is mid-game the server will have flagged us as a
+        // spectator; jump straight to the matching screen.
+        const status = res.roomState.status;
+        if (status === 'lobby') setScreen('lobby');
+        else if (status === 'countdown') setScreen('countdown');
+        else if (status === 'playing') setScreen('playing');
+        else if (status === 'finished') setScreen('results');
+        else setScreen('lobby');
       } else {
         setError(res.error);
       }
     });
-  }, []);
-
-  const spectateRoom = useCallback((roomCode: string, playerName: string) => {
-    setError(null);
-    socket.emit(
-      'room:join',
-      { roomCode: roomCode.toUpperCase(), playerName, asSpectator: true },
-      (res) => {
-        if (res.ok) {
-          setPlayerId(res.playerId);
-          setSessionToken(res.sessionToken);
-          setRoomState(res.roomState);
-          if (res.boards) setInitialBoards(res.boards);
-          sessionStorage.setItem('fruitbox_session', res.sessionToken);
-
-          const status = res.roomState.status;
-          if (status === 'lobby') setScreen('lobby');
-          else if (status === 'countdown') setScreen('countdown');
-          else if (status === 'playing') setScreen('playing');
-          else if (status === 'finished') setScreen('results');
-          else setScreen('lobby');
-        } else {
-          setError(res.error);
-        }
-      },
-    );
   }, []);
 
   const consumeInitialBoards = useCallback(() => {
@@ -198,7 +181,6 @@ export function useRoom() {
     isSpectator,
     createRoom,
     joinRoom,
-    spectateRoom,
     leaveRoom,
     consumeInitialBoards,
   };

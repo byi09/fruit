@@ -185,7 +185,8 @@ export class GameController {
 
     room.status = RoomStatus.FINISHED;
 
-    // Compute final standings
+    // Compute final standings (spectators are excluded here before we promote
+    // them — they didn't play this round so they shouldn't appear in it).
     const standings = computeStandings(room.players);
 
     // Archive this round's results
@@ -194,12 +195,27 @@ export class GameController {
       standings,
     });
 
+    // Promote spectators into players now that the match has ended so they
+    // participate in any rematch.
+    let promoted = false;
+    for (const p of Object.values(room.players)) {
+      if (p.isSpectator) {
+        p.isSpectator = undefined;
+        promoted = true;
+      }
+    }
+
     // Broadcast results with history
     this.io.to(roomCode).emit('game:finished', {
       standings,
       roundNumber: room.roundNumber,
       roundHistory: room.roundHistory,
     });
+
+    // Sync the updated roster so clients pick up the spectator→player change.
+    if (promoted) {
+      this.io.to(roomCode).emit('room:state', room);
+    }
 
     // Cleanup timers and boards
     this.cleanup(roomCode);

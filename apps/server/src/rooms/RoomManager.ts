@@ -62,17 +62,23 @@ export class RoomManager {
     roomCode: string,
     playerName: string,
     socketId: string,
-    isSpectator = false,
   ): { room: RoomState; player: PlayerState } | { error: string } {
     const room = this.rooms.get(roomCode);
     if (!room) return { error: 'Room not found' };
 
-    if (!isSpectator) {
-      if (room.status !== RoomStatus.LOBBY) return { error: 'Game already in progress' };
-      const activeCount = Object.values(room.players).filter((p) => !p.isSpectator).length;
-      if (activeCount >= MAX_PLAYERS_PER_ROOM) return { error: 'Room is full' };
-    } else if (room.status === RoomStatus.FINISHED) {
-      return { error: 'Game has ended' };
+    // Auto-assign spectator role when joining during an in-progress game.
+    // Spectators stay spectators until the match ends, then become players.
+    const midGame =
+      room.status === RoomStatus.COUNTDOWN ||
+      room.status === RoomStatus.PLAYING ||
+      room.status === RoomStatus.PAUSED;
+
+    if (room.status === RoomStatus.FINISHED) {
+      return { error: 'Game has ended — wait for the host to start a rematch' };
+    }
+
+    if (Object.keys(room.players).length >= MAX_PLAYERS_PER_ROOM) {
+      return { error: 'Room is full' };
     }
 
     const playerId = uuidv4();
@@ -83,7 +89,7 @@ export class RoomManager {
       connected: true,
       score: 0,
       movesMade: 0,
-      isSpectator: isSpectator || undefined,
+      isSpectator: midGame || undefined,
     };
 
     room.players[playerId] = player;

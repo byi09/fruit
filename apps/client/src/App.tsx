@@ -28,7 +28,6 @@ export default function App() {
     isSpectator,
     createRoom,
     joinRoom,
-    spectateRoom,
     leaveRoom,
     consumeInitialBoards,
   } = useRoom();
@@ -74,12 +73,7 @@ export default function App() {
     return (
       <>
         {connectionBadge}
-        <Home
-          onCreateRoom={createRoom}
-          onJoinRoom={joinRoom}
-          onSpectateRoom={spectateRoom}
-          error={error}
-        />
+        <Home onCreateRoom={createRoom} onJoinRoom={joinRoom} error={error} />
       </>
     );
   }

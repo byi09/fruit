@@ -19,7 +19,7 @@ export interface ClientEvents {
   ) => void;
 
   'room:join': (
-    payload: { roomCode: string; playerName: string; asSpectator?: boolean },
+    payload: { roomCode: string; playerName: string },
     ack: (res: { ok: true; playerId: string; sessionToken: string; roomState: RoomState; boards?: Record<string, Board> } | { ok: false; error: string }) => void,
   ) => void;
 
