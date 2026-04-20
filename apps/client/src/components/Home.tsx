@@ -17,21 +17,30 @@ interface FloatingApple {
 
 // Mini preview board — small fixed 4×9 slice
 const PREVIEW_VALUES = [
-  [3, 5, 2, 7, 1, 8, 4, 6, 2],
+  [3, 2, 5, 7, 1, 8, 4, 6, 2],
   [6, 2, 5, 3, 9, 1, 2, 4, 8],
   [4, 8, 1, 6, 2, 5, 3, 7, 1],
   [1, 3, 7, 2, 4, 9, 5, 2, 3],
 ];
-// Selected = cells forming a 3+2+5 = 10 group
-const PREVIEW_SELECTED = new Set<string>(['2,0', '2,1', '3,2']);
-const PREVIEW_CLEARED = new Set<string>(['0,6', '0,7', '1,5']);
+
+// Scripted preview loop — each move is a rectangular selection summing to 10.
+interface PreviewMove {
+  cells: string[];
+  caption: string;
+}
+const PREVIEW_MOVES: PreviewMove[] = [
+  { cells: ['0,0', '0,1', '0,2'], caption: '3 + 2 + 5 = 10' },
+  { cells: ['0,7', '1,7'], caption: '6 + 4 = 10' },
+  { cells: ['2,6', '2,7'], caption: '3 + 7 = 10' },
+  { cells: ['0,3', '1,3'], caption: '7 + 3 = 10' },
+];
+
+const PHASE_MS = { selecting: 1400, cleared: 900, reset: 600 } as const;
 
 export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
   const [playerName, setPlayerName] = useState(() => sessionStorage.getItem('fruitbox_name') || '');
   const [roomCode, setRoomCode] = useState('');
   const [mode, setMode] = useState<'menu' | 'join'>('menu');
-  const [applesCleared, setApplesCleared] = useState(() => 4823 + Math.floor(Math.random() * 200));
-  const [gamesPlayed, setGamesPlayed] = useState(() => 512 + Math.floor(Math.random() * 40));
 
   const floatingApples = useMemo<FloatingApple[]>(
     () =>
@@ -46,13 +55,47 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
     [],
   );
 
+  // Scripted animation for the mini-board preview.
+  const [moveIndex, setMoveIndex] = useState(0);
+  const [phase, setPhase] = useState<'selecting' | 'cleared' | 'reset'>('selecting');
+  const [clearedCells, setClearedCells] = useState<Set<string>>(new Set());
+
   useEffect(() => {
-    const id = setInterval(() => {
-      setApplesCleared((n) => n + Math.floor(Math.random() * 4) + 1);
-      if (Math.random() < 0.3) setGamesPlayed((n) => n + 1);
-    }, 2000);
-    return () => clearInterval(id);
-  }, []);
+    const delay = PHASE_MS[phase];
+    const t = setTimeout(() => {
+      if (phase === 'selecting') {
+        setClearedCells((prev) => {
+          const next = new Set(prev);
+          for (const c of PREVIEW_MOVES[moveIndex].cells) next.add(c);
+          return next;
+        });
+        setPhase('cleared');
+      } else if (phase === 'cleared') {
+        const nextIndex = moveIndex + 1;
+        if (nextIndex >= PREVIEW_MOVES.length) {
+          setPhase('reset');
+        } else {
+          setMoveIndex(nextIndex);
+          setPhase('selecting');
+        }
+      } else {
+        setClearedCells(new Set());
+        setMoveIndex(0);
+        setPhase('selecting');
+      }
+    }, delay);
+    return () => clearTimeout(t);
+  }, [moveIndex, phase]);
+
+  const currentMove = PREVIEW_MOVES[moveIndex];
+  const selectedCells =
+    phase === 'selecting' ? new Set(currentMove.cells) : new Set<string>();
+  const previewCaption =
+    phase === 'selecting'
+      ? currentMove.caption
+      : phase === 'cleared'
+      ? `✓ ${currentMove.caption} — cleared!`
+      : 'Next board…';
 
   const saveName = (name: string) => {
     setPlayerName(name);
@@ -159,26 +202,6 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
             <p className="text-[13px] text-text-2 mt-2">
               Competitive apple-clearing puzzle
             </p>
-
-            {/* Live ticker */}
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <div className="bg-panel border border-border rounded-lg px-3.5 py-2">
-                <div className="font-display text-[18px] font-extrabold text-text tabular-nums leading-none">
-                  {applesCleared.toLocaleString()}
-                </div>
-                <div className="text-[9px] text-text-3 uppercase tracking-wider mt-0.5">
-                  Apples cleared
-                </div>
-              </div>
-              <div className="bg-panel border border-border rounded-lg px-3.5 py-2">
-                <div className="font-display text-[18px] font-extrabold text-emerald tabular-nums leading-none">
-                  {gamesPlayed.toLocaleString()}
-                </div>
-                <div className="text-[9px] text-text-3 uppercase tracking-wider mt-0.5">
-                  Games played
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Glowing-border card */}
@@ -207,8 +230,8 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
                   {PREVIEW_VALUES.flatMap((row, r) =>
                     row.map((val, c) => {
                       const key = `${r},${c}`;
-                      const isSelected = PREVIEW_SELECTED.has(key);
-                      const isCleared = PREVIEW_CLEARED.has(key);
+                      const isSelected = selectedCells.has(key);
+                      const isCleared = clearedCells.has(key);
                       if (isCleared) {
                         return (
                           <div
@@ -246,7 +269,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
                   className="text-center text-[10px] mt-2"
                   style={{ color: 'rgba(233,69,96,0.7)' }}
                 >
-                  ✓ 3+2+5 = 10 — cleared!
+                  {previewCaption}
                 </p>
               </div>
 
