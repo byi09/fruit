@@ -5,7 +5,8 @@ interface CountdownProps {
   startsAt: number;
 }
 
-const RING_CIRCUMFERENCE = 2 * Math.PI * 45;
+const RING_R = 45;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
 
 export function Countdown({ startsAt }: CountdownProps) {
   const [display, setDisplay] = useState<string>('3');
@@ -57,23 +58,48 @@ export function Countdown({ startsAt }: CountdownProps) {
   const dashOffset = RING_CIRCUMFERENCE * (1 - progress);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/90 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+      style={{
+        background:
+          'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(233,69,96,0.1), transparent 60%), #08080f',
+      }}
+    >
+      {/* Orbs */}
+      <div
+        className="orb animate-orb1"
+        style={{
+          top: '10%',
+          left: '15%',
+          width: 420,
+          height: 420,
+          background: 'radial-gradient(circle, rgba(233,69,96,0.35), transparent 60%)',
+        }}
+      />
+      <div
+        className="orb animate-orb2"
+        style={{
+          bottom: '10%',
+          right: '15%',
+          width: 480,
+          height: 480,
+          background: 'radial-gradient(circle, rgba(99,102,241,0.25), transparent 60%)',
+        }}
+      />
+
       <div className="relative flex items-center justify-center animate-scale-in">
-        <svg
-          viewBox="0 0 100 100"
-          className="w-48 h-48 sm:w-56 sm:h-56 -rotate-90"
-        >
+        <svg viewBox="0 0 100 100" className="w-60 h-60 -rotate-90">
           <circle
-            cx="50" cy="50" r="45"
+            cx="50" cy="50" r={RING_R}
             fill="none"
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth="3"
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth="4"
           />
           <circle
-            cx="50" cy="50" r="45"
+            cx="50" cy="50" r={RING_R}
             fill="none"
-            stroke={isGo ? '#4ade80' : '#e94560'}
-            strokeWidth="3"
+            stroke={isGo ? 'rgba(16,185,129,0.7)' : 'rgba(233,69,96,0.6)'}
+            strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={RING_CIRCUMFERENCE}
             strokeDashoffset={dashOffset}
@@ -84,11 +110,13 @@ export function Countdown({ startsAt }: CountdownProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <span
             key={display}
-            className={`font-black animate-scale-in select-none ${
-              isGo
-                ? 'text-5xl sm:text-6xl text-emerald-400'
-                : 'text-7xl sm:text-8xl text-white'
+            className={`font-display font-extrabold select-none animate-count-pulse ${
+              isGo ? 'gradient-text-go' : 'text-white'
             }`}
+            style={{
+              fontSize: isGo ? 'clamp(60px, 12vw, 120px)' : 'clamp(120px, 20vw, 200px)',
+              lineHeight: 1,
+            }}
           >
             {display}
           </span>
@@ -96,7 +124,10 @@ export function Countdown({ startsAt }: CountdownProps) {
       </div>
 
       {!isGo && (
-        <p className="absolute bottom-1/3 text-white/30 text-sm font-medium tracking-wide">
+        <p
+          className="absolute bottom-[28%] text-text-3 uppercase"
+          style={{ fontSize: 14, letterSpacing: '0.1em' }}
+        >
           Get ready
         </p>
       )}

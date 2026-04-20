@@ -30,7 +30,7 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
   const fraction = Math.min(1, remaining / durationMs);
   const dashOffset = RING_CIRCUMFERENCE * (1 - fraction);
 
-  const ringColor = isLow ? '#ef4444' : '#e94560';
+  const ringColor = isLow ? '#e94560' : 'rgba(233,69,96,0.65)';
 
   return (
     <div className="flex items-center gap-2.5">
@@ -38,7 +38,7 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
         <circle
           cx="24" cy="24" r={RING_R}
           fill="none"
-          stroke="rgba(0,0,0,0.06)"
+          stroke="rgba(255,255,255,0.06)"
           strokeWidth="3"
         />
         <circle
@@ -53,9 +53,9 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
         />
       </svg>
       <span
-        className={`font-mono text-xl font-bold tabular-nums ${
-          isLow ? 'text-red-500' : 'text-stone-800'
-        } ${isLow && !isPaused ? 'animate-pulse' : ''}`}
+        className={`font-display text-2xl font-extrabold tabular-nums ${
+          isLow ? 'text-accent' : 'text-text'
+        } ${isLow && !isPaused ? 'animate-glow-pulse-fast' : ''}`}
       >
         {minutes}:{secs.toString().padStart(2, '0')}
       </span>

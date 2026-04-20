@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { useServerTime } from './hooks/useServerTime';
 import { useRoom } from './hooks/useRoom';
@@ -54,16 +54,39 @@ export default function App() {
     pauseGame,
     resumeGame,
   } = useGame(setScreen, { isSpectator, roomState, consumeInitialBoards });
-  const { messages, sendMessage, unreadCount, markVisible } = useChat();
+  const { messages, sendMessage, unreadCount: _unreadCount, markVisible } = useChat();
 
   useEffect(() => {
     markVisible(screen === 'playing');
   }, [screen, markVisible]);
 
+  // Streak tracking: score-delta-based. Reset on round change.
+  const [streak, setStreak] = useState(0);
+  const prevScoreRef = useRef(myScore);
+  const prevRoundRef = useRef(roundNumber);
+  useEffect(() => {
+    if (prevRoundRef.current !== roundNumber) {
+      setStreak(0);
+      prevScoreRef.current = myScore;
+      prevRoundRef.current = roundNumber;
+      return;
+    }
+    if (myScore > prevScoreRef.current) {
+      setStreak((s) => s + 1);
+    }
+    prevScoreRef.current = myScore;
+  }, [myScore, roundNumber]);
+
+  // Score-kick animation trigger: key swaps on each score change.
+  const scoreKickKey = useRef(0);
+  if (prevScoreRef.current !== myScore) {
+    scoreKickKey.current += 1;
+  }
+
   const connectionBadge = !isConnected ? (
-    <div className="fixed top-3 right-3 z-50">
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 backdrop-blur-sm border border-red-500/20 animate-pulse">
-        <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+    <div className="fixed top-3 right-3 z-[60]">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-accent/10 text-accent backdrop-blur-sm border border-accent/30 animate-pulse">
+        <div className="w-1.5 h-1.5 rounded-full bg-accent" />
         Reconnecting
       </div>
     </div>
@@ -109,45 +132,62 @@ export default function App() {
     return (
       <>
         {connectionBadge}
-        <div className="min-h-screen game-bg">
-          {/* Top bar */}
-          <div className="px-3 sm:px-6 py-3 border-b border-stone-200/50 bg-white/50 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              {/* Left: score + moves (or spectator label) */}
+        <div className="min-h-screen bg-bg text-text">
+          {/* HUD */}
+          <div
+            className="sticky top-0 z-50 h-[58px] px-4 sm:px-6 border-b border-border"
+            style={{ background: 'rgba(6,6,14,0.88)', backdropFilter: 'blur(24px)' }}
+          >
+            <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
+              {/* Left */}
               {isSpectator ? (
                 <div>
-                  <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Spectating</div>
-                  <div className="text-lg font-bold text-stone-900 leading-tight">
+                  <div className="label-eyebrow">Spectating</div>
+                  <div className="font-display text-lg font-bold text-text leading-tight">
                     {viewedPlayer?.name ?? '—'}
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-5">
-                  <div>
-                    <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Score</div>
-                    <div className="text-2xl font-extrabold tabular-nums text-stone-900 leading-tight">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-baseline gap-4">
+                    <span
+                      key={scoreKickKey.current}
+                      className="font-display text-[30px] font-extrabold tabular-nums text-text leading-none animate-score-kick inline-block"
+                    >
                       {myScore}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wider">Moves</div>
-                    <div className="text-2xl font-extrabold tabular-nums text-stone-500 leading-tight">
+                    </span>
+                    <span className="w-px h-[26px] bg-border" />
+                    <span className="font-display text-[20px] font-bold tabular-nums text-text-2 leading-none">
                       {myMoves}
-                    </div>
+                    </span>
                   </div>
+                  {streak >= 2 && (
+                    <span
+                      className="inline-flex items-center gap-1 font-display font-bold rounded-full border"
+                      style={{
+                        fontSize: 11,
+                        padding: '3px 10px',
+                        background: 'rgba(245,158,11,0.1)',
+                        borderColor: 'rgba(245,158,11,0.25)',
+                        color: 'var(--gold)',
+                      }}
+                    >
+                      🔥 ×{streak}
+                    </span>
+                  )}
                 </div>
               )}
 
-              {/* Center: timer */}
+              {/* Center */}
               <Timer endsAt={endsAt} isPaused={isPaused} durationMs={config.durationMs} />
 
-              {/* Right: pause + room code */}
-              <div className="flex items-center gap-3">
+              {/* Right */}
+              <div className="flex items-center gap-2">
                 {!isSpectator && (
                   <button
                     onClick={isPaused ? resumeGame : pauseGame}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                               bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-700 border border-stone-200/60"
+                               bg-panel hover:bg-panel-hover text-text-2 hover:text-text border border-border hover:border-border-bright"
                     title={isPaused ? 'Resume game' : 'Pause game'}
                   >
                     {isPaused ? (
@@ -158,7 +198,10 @@ export default function App() {
                     <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'}</span>
                   </button>
                 )}
-                <span className="text-xs font-mono text-stone-300 tracking-wider">
+                <span
+                  className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-lg font-display text-xs bg-panel border border-border text-text-3"
+                  style={{ letterSpacing: '0.14em' }}
+                >
                   {roomState.code}
                 </span>
               </div>
@@ -166,10 +209,10 @@ export default function App() {
           </div>
 
           {/* Game area */}
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-5">
             <div className="flex flex-col lg:flex-row gap-4">
-              {/* Left sidebar: Chat */}
-              <div className="lg:w-64 xl:w-72 flex flex-col order-2 lg:order-1 lg:min-h-[480px]">
+              {/* Left: Chat */}
+              <div className="lg:w-[220px] xl:w-[240px] flex flex-col order-2 lg:order-1 lg:min-h-[480px] lg:max-h-[calc(100vh-120px)]">
                 <Chat messages={messages} onSend={sendMessage} myPlayerId={playerId} />
               </div>
 
@@ -190,8 +233,8 @@ export default function App() {
                 )}
               </div>
 
-              {/* Right sidebar: Leaderboard + Stats */}
-              <div className="lg:w-56 xl:w-64 space-y-3 order-3">
+              {/* Right: Leaderboard + Stats */}
+              <div className="lg:w-[196px] xl:w-[220px] space-y-3 order-3">
                 <Leaderboard
                   roomState={roomState}
                   scores={scores}
@@ -209,23 +252,26 @@ export default function App() {
 
         {/* Pause overlay */}
         {isPaused && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="text-center animate-scale-in">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 opacity-80">
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
+            style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}
+          >
+            <div className="text-center animate-scale-in panel px-10 py-8">
+              <div
+                className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-text-2">
                   <rect x="5" y="3" width="5" height="18" rx="1" />
                   <rect x="14" y="3" width="5" height="18" rx="1" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-1">Game Paused</h2>
+              <h2 className="font-display text-[28px] font-extrabold text-text mb-1">Paused</h2>
               {pausedByName && (
-                <p className="text-white/50 text-sm mb-6">Paused by {pausedByName}</p>
+                <p className="text-text-3 text-sm mb-6">Paused by {pausedByName}</p>
               )}
               {!isSpectator && (
-                <button
-                  onClick={resumeGame}
-                  className="btn-primary"
-                >
+                <button onClick={resumeGame} className="btn-primary">
                   Resume
                 </button>
               )}
@@ -258,12 +304,18 @@ export default function App() {
   return (
     <>
       {connectionBadge}
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="text-center animate-fade-in">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-stone-100 mb-3">
+          <div
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3 animate-glow-pulse"
+            style={{
+              background: 'linear-gradient(135deg, rgba(233,69,96,0.18), rgba(233,69,96,0.08))',
+              border: '1px solid rgba(233,69,96,0.3)',
+            }}
+          >
             <span className="text-2xl">🍎</span>
           </div>
-          <div className="text-stone-400 text-sm">Loading...</div>
+          <div className="text-text-3 text-sm">Loading...</div>
         </div>
       </div>
     </>

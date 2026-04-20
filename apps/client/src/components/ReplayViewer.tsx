@@ -1,4 +1,4 @@
-import type { Board, Move, GameConfig, SolverSolution } from '@fruitbox/shared';
+import type { Board, GameConfig, SolverSolution } from '@fruitbox/shared';
 import { useReplay } from '../hooks/useReplay';
 import { CellView } from './Cell';
 
@@ -25,7 +25,6 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
     setSpeed,
   } = useReplay(initialBoard, solution);
 
-  // Count cleared cells at current step
   let clearedCount = 0;
   for (const row of currentBoard) {
     for (const cell of row) {
@@ -35,7 +34,6 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
 
   const totalCells = config.rows * config.cols;
 
-  // Build a set of cells that will be cleared by the next move (for highlighting)
   const highlightSet = new Set<string>();
   if (nextMove) {
     for (let r = nextMove.startRow; r <= nextMove.endRow; r++) {
@@ -48,23 +46,23 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-stone-50">
+    <div className="fixed inset-0 z-50 flex flex-col bg-bg">
       {/* Header */}
-      <div className="px-4 sm:px-6 py-3 border-b border-stone-200/50 bg-white/80 backdrop-blur-sm">
+      <div className="px-4 sm:px-6 py-3 border-b border-border bg-surface/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-stone-900">Best Found Solution</h2>
-            <p className="text-xs text-stone-400">
+            <h2 className="font-display text-lg font-bold text-text">Best Found Solution</h2>
+            <p className="text-xs text-text-2">
               {solution.totalCleared}/{totalCells} cells in {solution.moves.length} moves
-              <span className="mx-1.5">·</span>
+              <span className="mx-1.5 text-text-3">·</span>
               solved in {(solution.solveTimeMs / 1000).toFixed(1)}s
             </p>
           </div>
           <button
             onClick={onClose}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
-                       bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-700
-                       border border-stone-200/60 transition-all"
+                       bg-panel hover:bg-panel-hover text-text-2 hover:text-text
+                       border border-border hover:border-border-bright transition-all"
           >
             <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
               <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
@@ -78,30 +76,42 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
       <div className="flex-1 overflow-auto flex items-center justify-center p-4">
         <div className="w-full max-w-5xl">
           <div
-            className="relative grid rounded-xl select-none overflow-hidden bg-white border border-stone-200/60 shadow-card"
+            className="relative p-[10px]"
             style={{
-              gridTemplateColumns: `repeat(${config.cols}, 1fr)`,
-              gridTemplateRows: `repeat(${config.rows}, 1fr)`,
+              background: '#0c0c1a',
+              borderRadius: 18,
+              boxShadow:
+                '0 0 0 1px rgba(233,69,96,.04), 0 0 80px rgba(233,69,96,.07), 0 32px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.05)',
             }}
           >
-            {currentBoard.map((row, r) =>
-              row.map((cell, c) => {
-                const isHighlighted = highlightSet.has(`${r},${c}`);
-                return (
-                  <CellView
-                    key={`${r}-${c}`}
-                    cell={cell}
-                    selected={isHighlighted}
-                  />
-                );
-              }),
-            )}
+            <div
+              className="relative grid select-none overflow-hidden"
+              style={{
+                gridTemplateColumns: `repeat(${config.cols}, 1fr)`,
+                gridTemplateRows: `repeat(${config.rows}, 1fr)`,
+                gap: 2,
+                borderRadius: 10,
+              }}
+            >
+              {currentBoard.map((row, r) =>
+                row.map((cell, c) => {
+                  const isHighlighted = highlightSet.has(`${r},${c}`);
+                  return (
+                    <CellView
+                      key={`${r}-${c}`}
+                      cell={cell}
+                      selected={isHighlighted}
+                    />
+                  );
+                }),
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Transport Controls */}
-      <div className="px-4 sm:px-6 py-4 border-t border-stone-200/50 bg-white/80 backdrop-blur-sm">
+      <div className="px-4 sm:px-6 py-4 border-t border-border bg-surface/80 backdrop-blur-xl">
         <div className="max-w-xl mx-auto">
           {/* Progress bar */}
           <div className="mb-3">
@@ -111,27 +121,25 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
               max={totalSteps}
               value={currentStep}
               onChange={(e) => goToStep(Number(e.target.value))}
-              className="w-full h-1.5 bg-stone-200 rounded-full appearance-none cursor-pointer
+              className="w-full h-1.5 bg-panel border border-border rounded-full appearance-none cursor-pointer
                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5
                          [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full
-                         [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:shadow-sm
+                         [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:shadow-accent-glow
                          [&::-webkit-slider-thumb]:cursor-pointer"
             />
           </div>
 
           <div className="flex items-center justify-between">
-            {/* Step info */}
-            <div className="text-sm tabular-nums text-stone-500 w-32">
+            <div className="text-sm tabular-nums text-text-2 w-32">
               Step {currentStep}/{totalSteps}
-              <span className="text-stone-300 mx-1">·</span>
+              <span className="text-text-3 mx-1">·</span>
               {clearedCount} cleared
             </div>
 
-            {/* Controls */}
             <div className="flex items-center gap-1">
               <button
                 onClick={() => goToStep(0)}
-                className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
+                className="p-2 rounded-lg hover:bg-panel-hover text-text-2 hover:text-text transition-colors"
                 title="Go to start"
               >
                 <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
@@ -141,7 +149,7 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
               <button
                 onClick={stepBack}
                 disabled={currentStep === 0}
-                className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors disabled:opacity-30"
+                className="p-2 rounded-lg hover:bg-panel-hover text-text-2 hover:text-text transition-colors disabled:opacity-30"
                 title="Step back"
               >
                 <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
@@ -151,7 +159,7 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
               <button
                 onClick={isPlaying ? pause : play}
                 disabled={currentStep >= totalSteps && !isPlaying}
-                className="p-2.5 rounded-xl bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-30 mx-1"
+                className="p-2.5 rounded-xl bg-accent text-white hover:bg-accent-dark transition-colors disabled:opacity-30 mx-1 shadow-accent-glow"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -168,7 +176,7 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
               <button
                 onClick={stepForward}
                 disabled={currentStep >= totalSteps}
-                className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors disabled:opacity-30"
+                className="p-2 rounded-lg hover:bg-panel-hover text-text-2 hover:text-text transition-colors disabled:opacity-30"
                 title="Step forward"
               >
                 <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
@@ -177,7 +185,7 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
               </button>
               <button
                 onClick={() => goToStep(totalSteps)}
-                className="p-2 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
+                className="p-2 rounded-lg hover:bg-panel-hover text-text-2 hover:text-text transition-colors"
                 title="Go to end"
               >
                 <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
@@ -186,13 +194,12 @@ export function ReplayViewer({ initialBoard, config, solution, onClose }: Replay
               </button>
             </div>
 
-            {/* Speed control */}
             <div className="flex items-center gap-2 w-32 justify-end">
-              <span className="text-xs text-stone-400">Speed</span>
+              <span className="text-xs text-text-3">Speed</span>
               <select
                 value={speed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
-                className="text-xs bg-stone-100 border border-stone-200/60 rounded-md px-2 py-1 text-stone-600"
+                className="text-xs bg-panel border border-border rounded-md px-2 py-1 text-text-2"
               >
                 <option value={1000}>0.5x</option>
                 <option value={500}>1x</option>

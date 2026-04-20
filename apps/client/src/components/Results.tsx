@@ -17,6 +17,11 @@ interface ResultsProps {
 }
 
 const RANK_LABELS = ['', '1st', '2nd', '3rd'];
+const RANK_COLORS: Record<number, string> = {
+  1: '#f59e0b', // gold
+  2: '#cbd5e1', // silver
+  3: '#b45309', // bronze
+};
 
 const PLAYER_COLORS = [
   '#e94560', '#f59e0b', '#3b82f6', '#10b981',
@@ -72,51 +77,70 @@ export function Results({
   playerIds.forEach((id, i) => { playerColorMap[id] = PLAYER_COLORS[i % PLAYER_COLORS.length]; });
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-stone-50">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background:
+          'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(233,69,96,0.08), transparent 60%), #08080f',
+      }}
+    >
       <div className="w-full max-w-xl animate-slide-up">
         {/* Winner */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 mb-4">
-            <span className="text-3xl">{isWinner ? '🎉' : '🏁'}</span>
+          <div className="text-[52px] leading-none mb-3 select-none">
+            {isWinner ? '🏆' : '🏁'}
           </div>
-          <h2 className="text-2xl font-extrabold text-stone-900 tracking-tight">
+          <h2
+            className="font-display font-extrabold tracking-tight gradient-text"
+            style={{ fontSize: 36, letterSpacing: '-0.02em' }}
+          >
             {isWinner ? 'You Win!' : `${winner?.playerName} Wins!`}
           </h2>
-          <p className="text-stone-400 text-sm mt-1">
+          <p className="text-text-2 text-sm mt-2">
             Round {roundNumber} — {winner?.score} cleared in {winner?.movesMade} moves
           </p>
         </div>
 
         {/* Standings */}
-        <div className="panel-light p-5 mb-4">
-          <h3 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
-            Round {roundNumber}
-          </h3>
+        <div className="panel p-5 mb-4">
+          <h3 className="label-eyebrow mb-3">Round {roundNumber}</h3>
           <div className="space-y-1.5">
             {standings.map((s) => {
               const isMe = s.playerId === myPlayerId;
+              const rankColor = RANK_COLORS[s.rank];
               return (
                 <div
                   key={s.playerId}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg ${
-                    isMe ? 'bg-accent/[0.06]' : 'hover:bg-stone-50'
-                  } ${s.rank === 1 ? 'ring-1 ring-accent/20' : ''}`}
+                    isMe ? 'bg-accent/[0.07]' : 'hover:bg-panel-hover'
+                  } ${s.rank === 1 ? 'ring-1 ring-gold/30' : ''}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-stone-400 w-6 text-center">
+                    <span
+                      className="font-display text-[11px] font-bold w-8 text-center"
+                      style={{ color: rankColor ?? 'var(--text-3)' }}
+                    >
                       {RANK_LABELS[s.rank] || `#${s.rank}`}
                     </span>
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: playerColorMap[s.playerId] }} />
-                      <span className={`text-sm ${isMe ? 'font-semibold text-stone-900' : 'text-stone-700'}`}>
+                      <div
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: playerColorMap[s.playerId] }}
+                      />
+                      <span className={`text-sm ${isMe ? 'font-semibold text-text' : 'text-text-2'}`}>
                         {s.playerName}
-                        {isMe && <span className="text-stone-400 font-normal ml-1">(you)</span>}
+                        {isMe && <span className="text-text-3 font-normal ml-1">(you)</span>}
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold tabular-nums text-stone-800">{s.score}</span>
-                    <span className="text-xs text-stone-400 ml-2">{s.movesMade}m</span>
+                    <span
+                      className="font-display text-[17px] font-extrabold tabular-nums"
+                      style={{ color: s.rank === 1 ? 'var(--gold)' : 'var(--text)' }}
+                    >
+                      {s.score}
+                    </span>
+                    <span className="text-xs text-text-3 ml-2">{s.movesMade}m</span>
                   </div>
                 </div>
               );
@@ -126,8 +150,8 @@ export function Results({
 
         {/* Cumulative */}
         {roundHistory.length > 0 && (
-          <div className="panel-light p-5 mb-4">
-            <h3 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
+          <div className="panel p-5 mb-4">
+            <h3 className="label-eyebrow mb-3">
               Overall{roundHistory.length > 1 ? ` (${roundHistory.length} rounds)` : ''}
             </h3>
 
@@ -140,16 +164,18 @@ export function Results({
                   <div key={id}>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-stone-400 tabular-nums w-4 text-right">{i + 1}</span>
-                        <span className={`text-sm ${isMe ? 'font-semibold text-stone-900' : 'text-stone-600'}`}>
+                        <span className="font-display text-xs text-text-3 tabular-nums w-4 text-right">{i + 1}</span>
+                        <span className={`text-sm ${isMe ? 'font-semibold text-text' : 'text-text-2'}`}>
                           {playerNames[id]}
                         </span>
                       </div>
-                      <span className="text-sm font-bold tabular-nums text-stone-800">{cumulativeScores[id]}</span>
+                      <span className="font-display text-sm font-bold tabular-nums text-text">
+                        {cumulativeScores[id]}
+                      </span>
                     </div>
-                    <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                    <div className="h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-700"
+                        className="h-full rounded-full transition-all duration-[900ms]"
                         style={{ width: `${pct}%`, backgroundColor: playerColorMap[id] }}
                       />
                     </div>
@@ -174,7 +200,7 @@ export function Results({
 
         {/* Tie-break */}
         {standings.length > 1 && standings[0].score === standings[1].score && (
-          <div className="mb-4 px-3 py-2.5 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-600">
+          <div className="mb-4 px-3 py-2.5 bg-indigo-accent/10 border border-indigo-accent/30 rounded-lg text-sm text-indigo-accent">
             Tie broken by: fewer moves, then earliest final move.
           </div>
         )}
@@ -184,14 +210,14 @@ export function Results({
           <div className="mb-4">
             <button
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
-                         bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/60
+                         bg-emerald/10 hover:bg-emerald/15 text-emerald border border-emerald/25
                          transition-all disabled:opacity-50"
               onClick={handleSolve}
               disabled={isRunning}
             >
               {isRunning ? (
                 <>
-                  <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-emerald border-t-transparent rounded-full animate-spin" />
                   Solving... {solution ? `(${solution.totalCleared} cleared so far)` : ''}
                 </>
               ) : solution ? (
@@ -230,16 +256,13 @@ export function Results({
             </button>
           ) : (
             <div className="text-center py-2">
-              <div className="inline-flex items-center gap-2 text-sm text-stone-400">
-                <div className="w-1 h-1 rounded-full bg-stone-300 animate-pulse" />
+              <div className="inline-flex items-center gap-2 text-sm text-text-2">
+                <span className="pulse-dot" />
                 Waiting for host to start rematch
               </div>
             </div>
           )}
-          <button
-            className="btn-ghost w-full text-sm"
-            onClick={onLeave}
-          >
+          <button className="btn-ghost w-full text-sm" onClick={onLeave}>
             Leave Room
           </button>
         </div>
@@ -299,7 +322,7 @@ function ScoreChart({
 
   return (
     <div>
-      <h4 className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-2">Per Round</h4>
+      <h4 className="label-eyebrow mb-2">Per Round</h4>
       <div className={scrolls ? 'overflow-x-auto' : ''}>
       <svg
         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -312,8 +335,8 @@ function ScoreChart({
           const val = Math.round(maxScore * frac);
           return (
             <g key={frac}>
-              <line x1={paddingLeft} y1={y} x2={chartWidth - paddingRight} y2={y} stroke="#f5f5f4" strokeWidth={1} />
-              <text x={paddingLeft - 6} y={y + 3.5} textAnchor="end" fill="#a8a29e" fontSize={9} fontFamily="Inter, system-ui, sans-serif">
+              <line x1={paddingLeft} y1={y} x2={chartWidth - paddingRight} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth={1} />
+              <text x={paddingLeft - 6} y={y + 3.5} textAnchor="end" fill="#9090b8" fontSize={9} fontFamily="Inter, system-ui, sans-serif">
                 {val}
               </text>
             </g>
@@ -345,7 +368,7 @@ function ScoreChart({
         {roundHistory.map((round, ri) => {
           const x = paddingLeft + ri * groupWidth + groupWidth / 2;
           return (
-            <text key={ri} x={x} y={chartHeight - 6} textAnchor="middle" fill="#a8a29e" fontSize={10} fontFamily="Inter, system-ui, sans-serif">
+            <text key={ri} x={x} y={chartHeight - 6} textAnchor="middle" fill="#9090b8" fontSize={10} fontFamily="Inter, system-ui, sans-serif">
               R{round.roundNumber}
             </text>
           );
@@ -357,7 +380,7 @@ function ScoreChart({
         {playerIds.map((id) => (
           <div key={id} className="flex items-center gap-1.5 text-xs">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: playerColors[id] }} />
-            <span className={`${id === myPlayerId ? 'font-semibold text-stone-700' : 'text-stone-500'}`}>
+            <span className={`${id === myPlayerId ? 'font-semibold text-text' : 'text-text-2'}`}>
               {playerNames[id]}
             </span>
           </div>

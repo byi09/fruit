@@ -28,17 +28,17 @@ export function BoardSwitcher({ players, viewedPlayerId, scores, onSelect }: Boa
             onClick={() => onSelect(p.id)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all border ${
               isActive
-                ? 'bg-accent/10 text-stone-900 border-accent/30 shadow-sm'
-                : 'bg-white text-stone-500 hover:text-stone-800 border-stone-200/60'
+                ? 'bg-accent/[0.12] text-text border-accent/40'
+                : 'bg-panel text-text-2 hover:text-text border-border hover:border-border-bright'
             }`}
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                p.connected ? 'bg-emerald-400' : 'bg-stone-300'
+                p.connected ? 'bg-emerald' : 'bg-text-3'
               }`}
             />
             <span>{p.name}</span>
-            <span className="tabular-nums text-xs text-stone-400">{score}</span>
+            <span className="tabular-nums text-xs text-text-3 font-display">{score}</span>
           </button>
         );
       })}

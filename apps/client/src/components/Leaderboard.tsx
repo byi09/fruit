@@ -16,6 +16,7 @@ interface LeaderboardProps {
 
 export function Leaderboard({ roomState, scores, myPlayerId, myScore, myMoves }: LeaderboardProps) {
   const players = Object.values(roomState.players)
+    .filter((p) => !p.isSpectator)
     .map((p) => {
       const serverScore = scores[p.id];
       const isMe = p.id === myPlayerId;
@@ -31,26 +32,40 @@ export function Leaderboard({ roomState, scores, myPlayerId, myScore, myMoves }:
 
   return (
     <div className="panel p-3">
-      <h3 className="text-[10px] font-medium text-stone-400 uppercase tracking-wider mb-2.5">Leaderboard</h3>
+      <h3 className="flex items-center gap-2 label-eyebrow mb-2.5">
+        <span>Live Rankings</span>
+        <span className="flex-1 h-px bg-border" />
+      </h3>
       <div className="space-y-1">
         {players.map((p, i) => {
           const isMe = p.id === myPlayerId;
+          const isTop = i === 0;
           return (
             <div
               key={p.id}
               className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm transition-colors ${
-                isMe ? 'bg-accent/[0.06]' : 'hover:bg-stone-50'
+                isMe ? 'bg-accent/[0.07]' : 'hover:bg-panel-hover'
               } ${!p.connected ? 'opacity-40' : ''}`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-stone-300 text-xs tabular-nums w-3 text-right shrink-0">{i + 1}</span>
-                <span className={`truncate ${isMe ? 'text-stone-800 font-medium' : 'text-stone-500'}`}>
+                <span
+                  className={`text-xs tabular-nums w-4 text-right shrink-0 font-display font-bold ${
+                    isTop ? 'text-gold' : 'text-text-3'
+                  }`}
+                >
+                  {i + 1}
+                </span>
+                <span className={`truncate ${isMe ? 'text-text font-semibold' : 'text-text-2'}`}>
                   {p.name}
                 </span>
               </div>
               <div className="flex items-center gap-2.5 ml-2 shrink-0">
-                <span className="text-stone-300 text-xs tabular-nums">{p.movesMade}</span>
-                <span className={`font-bold tabular-nums ${isMe ? 'text-accent' : 'text-stone-700'}`}>
+                <span className="text-text-3 text-xs tabular-nums">{p.movesMade}</span>
+                <span
+                  className={`font-display font-bold tabular-nums ${
+                    isMe ? 'text-accent' : 'text-text'
+                  }`}
+                >
                   {p.score}
                 </span>
               </div>

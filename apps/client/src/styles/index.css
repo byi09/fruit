@@ -3,70 +3,179 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg: #08080f;
+    --surface: #0e0e1c;
+    --panel: rgba(255,255,255,0.035);
+    --panel-hover: rgba(255,255,255,0.055);
+    --border: rgba(255,255,255,0.07);
+    --border-bright: rgba(255,255,255,0.13);
+    --accent: #e94560;
+    --accent-dark: #c23152;
+    --accent-glow: rgba(233,69,96,0.2);
+    --gold: #f59e0b;
+    --emerald: #10b981;
+    --blue: #6366f1;
+    --text: #eeeef8;
+    --text-2: #9090b8;
+    --text-3: #44445e;
+    --cell: #131326;
+    --cell-hover: #1b1b38;
+    --cell-cleared: #09090f;
+    --r: 14px;
+    --r-sm: 9px;
+    --r-lg: 20px;
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
   }
 
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+  }
+
   body {
-    @apply text-stone-800 antialiased;
+    @apply antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   ::selection {
-    @apply bg-accent/20 text-accent-dark;
+    background: var(--accent-glow);
+    color: var(--text);
   }
 }
 
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center gap-2
-           px-5 py-2.5 rounded-lg font-semibold text-sm
+           px-5 py-2.5 font-semibold text-sm
            transition-all duration-150 ease-out
            active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+    border-radius: var(--r-sm);
   }
 
   .btn-primary {
     @apply btn bg-accent text-white
            hover:bg-accent-dark
-           shadow-sm hover:shadow-md;
+           shadow-accent-glow hover:shadow-accent-glow-lg hover:-translate-y-[1px];
   }
 
   .btn-secondary {
-    @apply btn bg-stone-800 text-white
-           hover:bg-stone-900
-           shadow-sm hover:shadow-md;
+    @apply btn bg-surface text-text
+           hover:bg-panel-hover border border-border hover:border-border-bright;
   }
 
   .btn-ghost {
-    @apply btn text-stone-500 hover:text-stone-800 hover:bg-stone-100;
+    @apply btn bg-transparent text-text-2 border border-border
+           hover:bg-panel-hover hover:text-text hover:border-border-bright;
   }
 
   .btn-outline {
-    @apply btn border border-stone-200 text-stone-700
-           hover:border-stone-300 hover:bg-stone-50;
+    @apply btn border border-border text-text-2
+           hover:bg-panel-hover hover:text-text hover:border-border-bright;
   }
 
   .input {
-    @apply w-full px-4 py-2.5 rounded-lg text-base
-           bg-white border border-stone-200
-           placeholder:text-stone-400
-           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10
+    @apply w-full px-4 py-2.5 text-base
+           bg-panel border border-border text-text
+           placeholder:text-text-3
+           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20
            transition-all duration-150;
+    border-radius: var(--r-sm);
   }
 
   .panel {
-    @apply bg-white/80 backdrop-blur-xl
-           border border-stone-200/50
-           rounded-xl shadow-card;
+    @apply bg-panel backdrop-blur-xl border border-border;
+    border-radius: var(--r);
   }
 
   .panel-light {
-    @apply bg-white border border-stone-200/60
-           rounded-xl shadow-card;
+    @apply bg-panel border border-border;
+    border-radius: var(--r);
   }
 
   .game-bg {
-    background: linear-gradient(to bottom right, #ecfdf5, #fffbeb);
+    background: var(--bg);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #ffffff 0%, #ffd6df 40%, #e94560 80%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .gradient-text-go {
+    background: linear-gradient(135deg, #10b981, #6366f1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .stat-tile {
+    @apply border border-border px-2.5 py-2 text-center;
+    background: rgba(255,255,255,0.025);
+    border-radius: 8px;
+  }
+
+  .label-eyebrow {
+    @apply text-[10px] font-semibold uppercase text-text-3;
+    letter-spacing: 0.09em;
+  }
+
+  .dot-grid {
+    background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 80%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 80%);
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .shimmer-surface {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-surface::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+    background-size: 200% 100%;
+    animation: shimmer 6s linear infinite;
+    pointer-events: none;
+  }
+
+  .glow-border {
+    position: relative;
+    padding: 1.5px;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: -80%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 60%, rgba(233,69,96,.8) 80%, #e94560 85%, rgba(233,69,96,.8) 90%, transparent);
+    animation: borderSpin 4s linear infinite;
+    pointer-events: none;
+  }
+
+  .pulse-dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full;
+    background: var(--text-3);
+    animation: glowPulse 1.5s ease-in-out infinite;
   }
 }
