@@ -30,7 +30,7 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
   const fraction = Math.min(1, remaining / durationMs);
   const dashOffset = RING_CIRCUMFERENCE * (1 - fraction);
 
-  const ringColor = isLow ? '#e94560' : 'rgba(233,69,96,0.65)';
+  const ringColor = isLow ? 'var(--accent)' : 'var(--timer-ring)';
 
   return (
     <div className="flex items-center gap-2.5">
@@ -38,7 +38,7 @@ export function Timer({ endsAt, isPaused, durationMs = 120_000 }: TimerProps) {
         <circle
           cx="24" cy="24" r={RING_R}
           fill="none"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--ring-track)"
           strokeWidth="3"
         />
         <circle

@@ -19,9 +19,9 @@ interface ResultsProps {
 
 const RANK_LABELS = ['', '1st', '2nd', '3rd'];
 const RANK_COLORS: Record<number, string> = {
-  1: '#f59e0b', // gold
-  2: '#cbd5e1', // silver
-  3: '#b45309', // bronze
+  1: 'var(--gold)',
+  2: 'var(--rank-silver)',
+  3: 'var(--rank-bronze)',
 };
 
 const PLAYER_COLORS = [
@@ -80,10 +80,7 @@ export function Results({
   return (
     <div
       className="relative min-h-screen flex items-center justify-center p-4"
-      style={{
-        background:
-          'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(233,69,96,0.08), transparent 60%), var(--bg)',
-      }}
+      style={{ background: 'var(--results-hero-bg)' }}
     >
       <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
@@ -177,7 +174,10 @@ export function Results({
                         {cumulativeScores[id]}
                       </span>
                     </div>
-                    <div className="h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
+                    <div
+                      className="h-[3px] rounded-full overflow-hidden"
+                      style={{ background: 'var(--progress-track)' }}
+                    >
                       <div
                         className="h-full rounded-full transition-all duration-[900ms]"
                         style={{ width: `${pct}%`, backgroundColor: playerColorMap[id] }}
@@ -339,8 +339,8 @@ function ScoreChart({
           const val = Math.round(maxScore * frac);
           return (
             <g key={frac}>
-              <line x1={paddingLeft} y1={y} x2={chartWidth - paddingRight} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth={1} />
-              <text x={paddingLeft - 6} y={y + 3.5} textAnchor="end" fill="#9090b8" fontSize={9} fontFamily="Inter, system-ui, sans-serif">
+              <line x1={paddingLeft} y1={y} x2={chartWidth - paddingRight} y2={y} stroke="var(--chart-axis)" strokeWidth={1} />
+              <text x={paddingLeft - 6} y={y + 3.5} textAnchor="end" fill="var(--chart-label)" fontSize={9} fontFamily="Inter, system-ui, sans-serif">
                 {val}
               </text>
             </g>
@@ -372,7 +372,7 @@ function ScoreChart({
         {roundHistory.map((round, ri) => {
           const x = paddingLeft + ri * groupWidth + groupWidth / 2;
           return (
-            <text key={ri} x={x} y={chartHeight - 6} textAnchor="middle" fill="#9090b8" fontSize={10} fontFamily="Inter, system-ui, sans-serif">
+            <text key={ri} x={x} y={chartHeight - 6} textAnchor="middle" fill="var(--chart-label)" fontSize={10} fontFamily="Inter, system-ui, sans-serif">
               R{round.roundNumber}
             </text>
           );

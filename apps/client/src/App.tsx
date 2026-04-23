@@ -170,8 +170,8 @@ export default function App() {
                       style={{
                         fontSize: 11,
                         padding: '3px 10px',
-                        background: 'rgba(245,158,11,0.1)',
-                        borderColor: 'rgba(245,158,11,0.25)',
+                        background: 'var(--streak-bg)',
+                        borderColor: 'var(--streak-border)',
                         color: 'var(--gold)',
                       }}
                     >
@@ -258,12 +258,12 @@ export default function App() {
         {isPaused && (
           <div
             className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
-            style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)' }}
+            style={{ background: 'var(--overlay-strong)', backdropFilter: 'blur(10px)' }}
           >
             <div className="text-center animate-scale-in panel px-10 py-8">
               <div
                 className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.06)' }}
+                style={{ background: 'var(--pause-icon-bg)' }}
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-text-2">
                   <rect x="5" y="3" width="5" height="18" rx="1" />
@@ -313,8 +313,8 @@ export default function App() {
           <div
             className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3 animate-glow-pulse"
             style={{
-              background: 'linear-gradient(135deg, rgba(233,69,96,0.18), rgba(233,69,96,0.08))',
-              border: '1px solid rgba(233,69,96,0.3)',
+              background: 'var(--hero-glow-bg)',
+              border: '1px solid var(--hero-glow-border)',
             }}
           >
             <span className="text-2xl">🍎</span>

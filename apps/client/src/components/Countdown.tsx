@@ -60,10 +60,7 @@ export function Countdown({ startsAt }: CountdownProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-      style={{
-        background:
-          'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(233,69,96,0.1), transparent 60%), var(--bg)',
-      }}
+      style={{ background: 'var(--countdown-bg)' }}
     >
       {/* Orbs */}
       <div
@@ -73,7 +70,7 @@ export function Countdown({ startsAt }: CountdownProps) {
           left: '15%',
           width: 420,
           height: 420,
-          background: 'radial-gradient(circle, rgba(233,69,96,0.35), transparent 60%)',
+          background: 'radial-gradient(circle, var(--orb-accent-weak), transparent 60%)',
         }}
       />
       <div
@@ -83,7 +80,7 @@ export function Countdown({ startsAt }: CountdownProps) {
           right: '15%',
           width: 480,
           height: 480,
-          background: 'radial-gradient(circle, rgba(99,102,241,0.25), transparent 60%)',
+          background: 'radial-gradient(circle, var(--orb-blue), transparent 60%)',
         }}
       />
 
@@ -92,13 +89,13 @@ export function Countdown({ startsAt }: CountdownProps) {
           <circle
             cx="50" cy="50" r={RING_R}
             fill="none"
-            stroke="rgba(255,255,255,0.04)"
+            stroke="var(--ring-track)"
             strokeWidth="4"
           />
           <circle
             cx="50" cy="50" r={RING_R}
             fill="none"
-            stroke={isGo ? 'rgba(16,185,129,0.7)' : 'rgba(233,69,96,0.6)'}
+            stroke={isGo ? 'var(--countdown-ring-go)' : 'var(--countdown-ring-active)'}
             strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={RING_CIRCUMFERENCE}
@@ -111,11 +108,12 @@ export function Countdown({ startsAt }: CountdownProps) {
           <span
             key={display}
             className={`font-display font-extrabold select-none animate-count-pulse ${
-              isGo ? 'gradient-text-go' : 'text-white'
+              isGo ? 'gradient-text-go' : ''
             }`}
             style={{
               fontSize: isGo ? 'clamp(60px, 12vw, 120px)' : 'clamp(120px, 20vw, 200px)',
               lineHeight: 1,
+              color: isGo ? undefined : 'var(--countdown-display)',
             }}
           >
             {display}

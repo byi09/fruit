@@ -26,8 +26,8 @@ export const CellView = memo(function CellView({ cell, selected, clearing }: Cel
         {selected ? '🍏' : '🍎'}
       </span>
       <span
-        className="absolute inset-0 flex items-center justify-center font-display font-extrabold pointer-events-none text-xs sm:text-sm text-white"
-        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,1)' }}
+        className="absolute inset-0 flex items-center justify-center font-display font-extrabold pointer-events-none text-xs sm:text-sm"
+        style={{ color: 'var(--cell-text)', textShadow: 'var(--cell-text-shadow)' }}
       >
         {cell.value}
       </span>

@@ -71,10 +71,10 @@ export function PlayerStats({ score, moves, totalCells, startsAt }: PlayerStatsP
       <div className="flex items-center justify-center mb-3">
         <div className="relative w-20 h-20">
           <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-            <circle cx="40" cy="40" r={RING_R} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="5" />
+            <circle cx="40" cy="40" r={RING_R} fill="none" stroke="var(--ring-track)" strokeWidth="5" />
             <circle
               cx="40" cy="40" r={RING_R} fill="none"
-              stroke="#e94560" strokeWidth="5"
+              stroke="var(--accent)" strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={`${ringDash} ${RING_CIRCUMFERENCE}`}
               className="transition-all duration-500"

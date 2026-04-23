@@ -5,14 +5,10 @@ interface SelectionOverlayProps {
 
 export function SelectionOverlay({ rect, valid }: SelectionOverlayProps) {
   const border = valid
-    ? '2px solid rgba(16, 185, 129, 0.75)'
-    : '2px solid rgba(233, 69, 96, 0.7)';
-  const background = valid
-    ? 'rgba(16, 185, 129, 0.1)'
-    : 'rgba(233, 69, 96, 0.08)';
-  const shadow = valid
-    ? '0 0 24px rgba(16, 185, 129, 0.3)'
-    : '0 0 18px rgba(233, 69, 96, 0.3)';
+    ? '2px solid var(--sel-valid-border)'
+    : '2px solid var(--sel-invalid-border)';
+  const background = valid ? 'var(--sel-valid-bg)' : 'var(--sel-invalid-bg)';
+  const shadow = valid ? 'var(--sel-valid-shadow)' : 'var(--sel-invalid-shadow)';
 
   return (
     <div

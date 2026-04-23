@@ -126,7 +126,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
           left: '-10%',
           width: 520,
           height: 520,
-          background: 'radial-gradient(circle, rgba(233,69,96,0.45), transparent 60%)',
+          background: 'radial-gradient(circle, var(--orb-accent), transparent 60%)',
         }}
       />
       <div
@@ -136,7 +136,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
           right: '-10%',
           width: 560,
           height: 560,
-          background: 'radial-gradient(circle, rgba(99,102,241,0.35), transparent 60%)',
+          background: 'radial-gradient(circle, var(--orb-blue), transparent 60%)',
         }}
       />
       <div
@@ -146,7 +146,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
           left: '40%',
           width: 420,
           height: 420,
-          background: 'radial-gradient(circle, rgba(245,158,11,0.15), transparent 60%)',
+          background: 'radial-gradient(circle, var(--orb-gold), transparent 60%)',
           animationDelay: '-8s',
         }}
       />
@@ -181,7 +181,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
               <div
                 className="absolute inset-[-30%] rounded-full animate-glow-pulse"
                 style={{
-                  background: 'radial-gradient(circle, rgba(233,69,96,0.5), transparent 60%)',
+                  background: 'radial-gradient(circle, var(--orb-accent), transparent 60%)',
                   filter: 'blur(16px)',
                 }}
               />
@@ -189,9 +189,9 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
                 className="relative w-full h-full flex items-center justify-center"
                 style={{
                   borderRadius: 22,
-                  background: 'linear-gradient(135deg, rgba(233,69,96,0.18), rgba(233,69,96,0.08))',
-                  border: '1px solid rgba(233,69,96,0.3)',
-                  boxShadow: '0 0 40px rgba(233,69,96,0.2)',
+                  background: 'var(--hero-glow-bg)',
+                  border: '1px solid var(--hero-glow-border)',
+                  boxShadow: 'var(--hero-glow-shadow)',
                 }}
               >
                 <span className="text-4xl">🍎</span>
@@ -213,7 +213,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
             <div
               className="relative shimmer-surface"
               style={{
-                background: 'rgba(14,14,28,0.96)',
+                background: 'var(--hero-card-bg)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: 14,
                 overflow: 'hidden',
@@ -250,17 +250,17 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
                           key={key}
                           className="relative aspect-square flex items-center justify-center"
                           style={{
-                            background: isSelected ? 'rgba(233,69,96,0.25)' : 'var(--cell)',
+                            background: isSelected ? 'var(--preview-select-bg)' : 'var(--cell)',
                             borderRadius: 2,
-                            boxShadow: isSelected ? 'inset 0 0 0 1px rgba(233,69,96,0.5)' : undefined,
+                            boxShadow: isSelected ? 'inset 0 0 0 1px var(--preview-select-ring)' : undefined,
                           }}
                         >
                           <span className="text-[10px] leading-none">
                             {isSelected ? '🍏' : '🍎'}
                           </span>
                           <span
-                            className="absolute inset-0 flex items-center justify-center font-display font-extrabold text-white text-[9px]"
-                            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95)' }}
+                            className="absolute inset-0 flex items-center justify-center font-display font-extrabold text-[9px]"
+                            style={{ color: 'var(--cell-text)', textShadow: 'var(--cell-text-shadow)' }}
                           >
                             {val}
                           </span>
@@ -271,7 +271,7 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
                 </div>
                 <p
                   className="text-center text-[10px] mt-2"
-                  style={{ color: 'rgba(233,69,96,0.7)' }}
+                  style={{ color: 'var(--caption-accent)' }}
                 >
                   {previewCaption}
                 </p>

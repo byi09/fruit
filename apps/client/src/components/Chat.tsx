@@ -52,7 +52,7 @@ export function Chat({ messages, onSend, myPlayerId }: ChatProps) {
                 className={`px-2.5 py-1.5 rounded-xl text-sm max-w-[85%] break-words ${
                   isMe
                     ? 'bg-accent text-white rounded-br-[3px]'
-                    : 'bg-white/[0.06] text-text border border-border rounded-bl-[3px]'
+                    : 'bg-panel-hover text-text border border-border rounded-bl-[3px]'
                 }`}
               >
                 {msg.message}

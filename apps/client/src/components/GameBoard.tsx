@@ -134,10 +134,9 @@ export function GameBoard({ board, config, onMove, disabled, readOnly }: GameBoa
       <div
         className="relative p-[10px]"
         style={{
-          background: '#0c0c1a',
+          background: 'var(--board-frame-bg)',
           borderRadius: 18,
-          boxShadow:
-            '0 0 0 1px rgba(233,69,96,.04), 0 0 80px rgba(233,69,96,.07), 0 32px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.05)',
+          boxShadow: 'var(--shadow-board)',
         }}
       >
         <div
