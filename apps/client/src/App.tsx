@@ -14,6 +14,7 @@ import { Leaderboard } from './components/Leaderboard';
 import { Results } from './components/Results';
 import { Chat } from './components/Chat';
 import { PlayerStats } from './components/PlayerStats';
+import { ThemeToggle } from './components/ThemeToggle';
 
 export default function App() {
   const { isConnected } = useSocket();
@@ -29,6 +30,7 @@ export default function App() {
     createRoom,
     joinRoom,
     leaveRoom,
+    updateConfig,
     consumeInitialBoards,
   } = useRoom();
   const {
@@ -111,6 +113,7 @@ export default function App() {
           isHost={isHost}
           onStartGame={startGame}
           onLeave={leaveRoom}
+          onUpdateConfig={updateConfig}
         />
       </>
     );
@@ -136,7 +139,7 @@ export default function App() {
           {/* HUD */}
           <div
             className="sticky top-0 z-50 h-[58px] px-4 sm:px-6 border-b border-border"
-            style={{ background: 'rgba(6,6,14,0.88)', backdropFilter: 'blur(24px)' }}
+            style={{ background: 'var(--hud-bg)', backdropFilter: 'blur(24px)' }}
           >
             <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
               {/* Left */}
@@ -183,6 +186,7 @@ export default function App() {
 
               {/* Right */}
               <div className="flex items-center gap-2">
+                <ThemeToggle />
                 {!isSpectator && (
                   <button
                     onClick={isPaused ? resumeGame : pauseGame}

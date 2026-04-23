@@ -11,6 +11,12 @@ import {
   TARGET_SUM,
   MAX_PLAYERS_PER_ROOM,
   ROOM_CLEANUP_MS,
+  MIN_ROWS,
+  MAX_ROWS,
+  MIN_COLS,
+  MAX_COLS,
+  MIN_DURATION_MS,
+  MAX_DURATION_MS,
 } from '@fruitbox/shared';
 import { generateRoomCode } from './RoomCodeGenerator.js';
 
@@ -155,6 +161,31 @@ export class RoomManager {
 
     room.hostPlayerId = connectedActive[0].id;
     return connectedActive[0].id;
+  }
+
+  updateConfig(
+    roomCode: string,
+    playerId: string,
+    patch: { rows?: number; cols?: number; durationMs?: number },
+  ): { ok: true; config: GameConfig } | { ok: false; error: string } {
+    const room = this.rooms.get(roomCode);
+    if (!room) return { ok: false, error: 'Room not found' };
+    if (room.hostPlayerId !== playerId) return { ok: false, error: 'Only host can update config' };
+    if (room.status !== RoomStatus.LOBBY) return { ok: false, error: 'Settings locked after game starts' };
+
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(v)));
+
+    if (patch.rows !== undefined && Number.isFinite(patch.rows)) {
+      room.config.rows = clamp(patch.rows, MIN_ROWS, MAX_ROWS);
+    }
+    if (patch.cols !== undefined && Number.isFinite(patch.cols)) {
+      room.config.cols = clamp(patch.cols, MIN_COLS, MAX_COLS);
+    }
+    if (patch.durationMs !== undefined && Number.isFinite(patch.durationMs)) {
+      room.config.durationMs = clamp(patch.durationMs, MIN_DURATION_MS, MAX_DURATION_MS);
+    }
+
+    return { ok: true, config: { ...room.config } };
   }
 
   resetForRematch(roomCode: string): void {

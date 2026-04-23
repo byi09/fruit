@@ -3,6 +3,7 @@ import type { StandingEntry, RoundResult, GameConfig } from '@fruitbox/shared';
 import { generateBoard } from '@fruitbox/shared';
 import { useSolver } from '../hooks/useSolver';
 import { ReplayViewer } from './ReplayViewer';
+import { ThemeToggle } from './ThemeToggle';
 
 interface ResultsProps {
   standings: StandingEntry[];
@@ -78,12 +79,15 @@ export function Results({
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="relative min-h-screen flex items-center justify-center p-4"
       style={{
         background:
-          'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(233,69,96,0.08), transparent 60%), #08080f',
+          'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(233,69,96,0.08), transparent 60%), var(--bg)',
       }}
     >
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-xl animate-slide-up">
         {/* Winner */}
         <div className="text-center mb-8">

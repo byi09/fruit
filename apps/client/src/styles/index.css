@@ -22,9 +22,34 @@
     --cell: #131326;
     --cell-hover: #1b1b38;
     --cell-cleared: #09090f;
+    --hud-bg: rgba(6,6,14,0.88);
+    --lobby-bg: radial-gradient(ellipse 60% 40% at 50% -5%, rgba(99,102,241,0.07), transparent 60%), #08080f;
+    --overlay-weak: rgba(255,255,255,0.025);
+    --shimmer-tint: rgba(255,255,255,0.04);
+    --dot-tint: rgba(255,255,255,0.06);
     --r: 14px;
     --r-sm: 9px;
     --r-lg: 20px;
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f5f6fb;
+    --surface: #ffffff;
+    --panel: rgba(15,17,34,0.04);
+    --panel-hover: rgba(15,17,34,0.07);
+    --border: rgba(15,17,34,0.09);
+    --border-bright: rgba(15,17,34,0.18);
+    --text: #14142b;
+    --text-2: #4a4a68;
+    --text-3: #9394ad;
+    --cell: #eceff7;
+    --cell-hover: #dde1ee;
+    --cell-cleared: #f5f6fb;
+    --hud-bg: rgba(255,255,255,0.82);
+    --lobby-bg: radial-gradient(ellipse 60% 40% at 50% -5%, rgba(99,102,241,0.12), transparent 60%), #f5f6fb;
+    --overlay-weak: rgba(15,17,34,0.03);
+    --shimmer-tint: rgba(15,17,34,0.05);
+    --dot-tint: rgba(15,17,34,0.08);
   }
 
   * {
@@ -119,7 +144,7 @@
 
   .stat-tile {
     @apply border border-border px-2.5 py-2 text-center;
-    background: rgba(255,255,255,0.025);
+    background: var(--overlay-weak);
     border-radius: 8px;
   }
 
@@ -129,7 +154,7 @@
   }
 
   .dot-grid {
-    background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--dot-tint) 1px, transparent 1px);
     background-size: 28px 28px;
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 80%);
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 40%, transparent 80%);
@@ -151,7 +176,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+    background: linear-gradient(105deg, transparent 40%, var(--shimmer-tint) 50%, transparent 60%);
     background-size: 200% 100%;
     animation: shimmer 6s linear infinite;
     pointer-events: none;

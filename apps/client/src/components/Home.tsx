@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HomeProps {
   onCreateRoom: (playerName: string) => void;
@@ -114,6 +115,9 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg">
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       {/* Animated orbs */}
       <div
         className="orb animate-orb1"

@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import type { RoomState } from '@fruitbox/shared';
+import {
+  type RoomState,
+  MIN_ROWS,
+  MAX_ROWS,
+  MIN_COLS,
+  MAX_COLS,
+  MIN_DURATION_MS,
+  MAX_DURATION_MS,
+  DURATION_STEP_MS,
+} from '@fruitbox/shared';
+import { ThemeToggle } from './ThemeToggle';
 
 interface LobbyProps {
   roomState: RoomState;
@@ -7,6 +17,23 @@ interface LobbyProps {
   isHost: boolean;
   onStartGame: () => void;
   onLeave: () => void;
+  onUpdateConfig: (patch: { rows?: number; cols?: number; durationMs?: number }) => void;
+}
+
+const SIZE_PRESETS: { label: string; rows: number; cols: number }[] = [
+  { label: 'Small', rows: 8, cols: 12 },
+  { label: 'Classic', rows: 10, cols: 17 },
+  { label: 'Large', rows: 12, cols: 20 },
+];
+
+const DURATION_PRESETS: { label: string; ms: number }[] = [
+  { label: '1 min', ms: 60_000 },
+  { label: '2 min', ms: 120_000 },
+  { label: '5 min', ms: 300_000 },
+];
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
 }
 
 const AVATAR_COLORS = [
@@ -14,7 +41,7 @@ const AVATAR_COLORS = [
   'bg-violet-500', 'bg-pink-500', 'bg-teal-500', 'bg-orange-500',
 ];
 
-export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave }: LobbyProps) {
+export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave, onUpdateConfig }: LobbyProps) {
   const allPlayers = Object.values(roomState.players);
   const players = allPlayers.filter((p) => !p.isSpectator);
   const spectators = allPlayers.filter((p) => p.isSpectator);
@@ -30,12 +57,12 @@ export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave }: Lob
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        background:
-          'radial-gradient(ellipse 60% 40% at 50% -5%, rgba(99,102,241,0.07), transparent 60%), #08080f',
-      }}
+      className="relative min-h-screen flex items-center justify-center p-4"
+      style={{ background: 'var(--lobby-bg)' }}
     >
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md animate-slide-up">
         <div className="text-center mb-8">
           <p className="label-eyebrow mb-3">Room Code</p>
@@ -116,6 +143,14 @@ export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave }: Lob
           </div>
         )}
 
+        <GameSettings
+          rows={roomState.config.rows}
+          cols={roomState.config.cols}
+          durationMs={roomState.config.durationMs}
+          editable={isHost}
+          onChange={onUpdateConfig}
+        />
+
         {!isHost && (
           <div className="text-center mb-4">
             <div className="inline-flex items-center gap-2 text-sm text-text-2">
@@ -135,6 +170,164 @@ export function Lobby({ roomState, playerId, isHost, onStartGame, onLeave }: Lob
             Leave Room
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface GameSettingsProps {
+  rows: number;
+  cols: number;
+  durationMs: number;
+  editable: boolean;
+  onChange: (patch: { rows?: number; cols?: number; durationMs?: number }) => void;
+}
+
+function GameSettings({ rows, cols, durationMs, editable, onChange }: GameSettingsProps) {
+  const [open, setOpen] = useState(false);
+  const durationSec = Math.round(durationMs / 1000);
+
+  const bump = (field: 'rows' | 'cols' | 'durationMs', delta: number) => {
+    if (!editable) return;
+    if (field === 'rows') {
+      onChange({ rows: clamp(rows + delta, MIN_ROWS, MAX_ROWS) });
+    } else if (field === 'cols') {
+      onChange({ cols: clamp(cols + delta, MIN_COLS, MAX_COLS) });
+    } else {
+      onChange({ durationMs: clamp(durationMs + delta, MIN_DURATION_MS, MAX_DURATION_MS) });
+    }
+  };
+
+  const applySizePreset = (preset: { rows: number; cols: number }) => {
+    if (!editable) return;
+    onChange({ rows: preset.rows, cols: preset.cols });
+  };
+
+  const applyDurationPreset = (ms: number) => {
+    if (!editable) return;
+    onChange({ durationMs: ms });
+  };
+
+  return (
+    <div className="panel p-4 mb-4">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <div>
+          <h2 className="label-eyebrow">Game Settings</h2>
+          <div className="text-xs text-text-3 mt-1 font-display tabular-nums">
+            {rows} × {cols} · {durationSec}s
+          </div>
+        </div>
+        <span className="text-text-3 text-xs">{open ? '▾' : '▸'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-4">
+          {!editable && (
+            <p className="text-xs text-text-3">Only the host can change these.</p>
+          )}
+
+          <Stepper
+            label="Rows"
+            value={rows}
+            min={MIN_ROWS}
+            max={MAX_ROWS}
+            onDec={() => bump('rows', -1)}
+            onInc={() => bump('rows', +1)}
+            disabled={!editable}
+          />
+          <Stepper
+            label="Columns"
+            value={cols}
+            min={MIN_COLS}
+            max={MAX_COLS}
+            onDec={() => bump('cols', -1)}
+            onInc={() => bump('cols', +1)}
+            disabled={!editable}
+          />
+
+          <div className="flex flex-wrap gap-1.5">
+            {SIZE_PRESETS.map((p) => {
+              const active = p.rows === rows && p.cols === cols;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  disabled={!editable}
+                  onClick={() => applySizePreset(p)}
+                  className={`px-2.5 py-1 rounded-md text-xs border transition-colors ${
+                    active
+                      ? 'bg-accent/[0.1] border-accent/40 text-text'
+                      : 'bg-panel border-border text-text-2 hover:bg-panel-hover hover:text-text'
+                  } ${!editable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {p.label} <span className="text-text-3">({p.rows}×{p.cols})</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <Stepper
+            label="Duration"
+            value={`${durationSec}s`}
+            min={MIN_DURATION_MS / 1000}
+            max={MAX_DURATION_MS / 1000}
+            onDec={() => bump('durationMs', -DURATION_STEP_MS)}
+            onInc={() => bump('durationMs', +DURATION_STEP_MS)}
+            disabled={!editable}
+          />
+
+          <div className="flex flex-wrap gap-1.5">
+            {DURATION_PRESETS.map((p) => {
+              const active = p.ms === durationMs;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  disabled={!editable}
+                  onClick={() => applyDurationPreset(p.ms)}
+                  className={`px-2.5 py-1 rounded-md text-xs border transition-colors ${
+                    active
+                      ? 'bg-accent/[0.1] border-accent/40 text-text'
+                      : 'bg-panel border-border text-text-2 hover:bg-panel-hover hover:text-text'
+                  } ${!editable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface StepperProps {
+  label: string;
+  value: number | string;
+  min: number;
+  max: number;
+  onDec: () => void;
+  onInc: () => void;
+  disabled?: boolean;
+}
+
+function Stepper({ label, value, onDec, onInc, disabled }: StepperProps) {
+  const btnCls =
+    'w-7 h-7 rounded-md border border-border bg-panel text-text-2 hover:bg-panel-hover hover:text-text transition-colors text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed';
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-text-2">{label}</span>
+      <div className="flex items-center gap-2">
+        <button type="button" className={btnCls} onClick={onDec} disabled={disabled}>−</button>
+        <span className="font-display tabular-nums text-text text-sm w-12 text-center">
+          {value}
+        </span>
+        <button type="button" className={btnCls} onClick={onInc} disabled={disabled}>+</button>
       </div>
     </div>
   );

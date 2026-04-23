@@ -123,6 +123,19 @@ export function registerHandlers(
     return !!room?.players[mapping.playerId]?.isSpectator;
   }
 
+  // --- Room: Update Config ---
+  socket.on('room:update_config', (payload, ack) => {
+    const mapping = socketToPlayer.get(socket.id);
+    if (!mapping) return ack({ ok: false, error: 'Not in a room' });
+    if (isSpectatorSocket()) return ack({ ok: false, error: 'Spectators cannot change settings' });
+
+    const result = roomManager.updateConfig(mapping.roomCode, mapping.playerId, payload);
+    if (!result.ok) return ack(result);
+
+    io.to(mapping.roomCode).emit('room:config_updated', { config: result.config });
+    ack(result);
+  });
+
   // --- Game: Start ---
   socket.on('game:start', (ack) => {
     const mapping = socketToPlayer.get(socket.id);

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { Board, RoomState, PlayerState } from '@fruitbox/shared';
+import type { Board, RoomState, PlayerState, GameConfig } from '@fruitbox/shared';
 import { socket } from '../socket';
 
 export type Screen = 'home' | 'lobby' | 'countdown' | 'playing' | 'results';
@@ -87,6 +87,10 @@ export function useRoom() {
       });
     }
 
+    function onConfigUpdated({ config }: { config: GameConfig }) {
+      setRoomState((prev) => (prev ? { ...prev, config } : prev));
+    }
+
     function onError({ message }: { message: string }) {
       setError(message);
       setTimeout(() => setError(null), 5000);
@@ -98,6 +102,7 @@ export function useRoom() {
     socket.on('room:player_disconnected', onPlayerDisconnected);
     socket.on('room:player_reconnected', onPlayerReconnected);
     socket.on('room:host_changed', onHostChanged);
+    socket.on('room:config_updated', onConfigUpdated);
     socket.on('error', onError);
 
     return () => {
@@ -107,6 +112,7 @@ export function useRoom() {
       socket.off('room:player_disconnected', onPlayerDisconnected);
       socket.off('room:player_reconnected', onPlayerReconnected);
       socket.off('room:host_changed', onHostChanged);
+      socket.off('room:config_updated', onConfigUpdated);
       socket.off('error', onError);
     };
   }, []);
@@ -156,6 +162,20 @@ export function useRoom() {
     return b;
   }, [initialBoards]);
 
+  const updateConfig = useCallback(
+    (patch: { rows?: number; cols?: number; durationMs?: number }) => {
+      socket.emit('room:update_config', patch, (res) => {
+        if (res.ok) {
+          setRoomState((prev) => (prev ? { ...prev, config: res.config } : prev));
+        } else {
+          setError(res.error);
+          setTimeout(() => setError(null), 5000);
+        }
+      });
+    },
+    [],
+  );
+
   const leaveRoom = useCallback(() => {
     socket.emit('room:leave');
     setRoomState(null);
@@ -182,6 +202,7 @@ export function useRoom() {
     createRoom,
     joinRoom,
     leaveRoom,
+    updateConfig,
     consumeInitialBoards,
   };
 }

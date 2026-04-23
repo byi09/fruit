@@ -62,7 +62,7 @@ export function Countdown({ startsAt }: CountdownProps) {
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
       style={{
         background:
-          'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(233,69,96,0.1), transparent 60%), #08080f',
+          'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(233,69,96,0.1), transparent 60%), var(--bg)',
       }}
     >
       {/* Orbs */}

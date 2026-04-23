@@ -30,6 +30,11 @@ export interface ClientEvents {
 
   'room:leave': () => void;
 
+  'room:update_config': (
+    payload: { rows?: number; cols?: number; durationMs?: number },
+    ack: (res: { ok: true; config: GameConfig } | { ok: false; error: string }) => void,
+  ) => void;
+
   'game:start': (
     ack: (res: { ok: boolean; error?: string }) => void,
   ) => void;
@@ -69,6 +74,7 @@ export interface ServerEvents {
   'room:player_disconnected': (payload: { playerId: string }) => void;
   'room:player_reconnected': (payload: { playerId: string }) => void;
   'room:host_changed': (payload: { playerId: string }) => void;
+  'room:config_updated': (payload: { config: GameConfig }) => void;
 
   'game:countdown': (payload: { startsAt: number }) => void;
   'game:started': (payload: { seed: number; endsAt: number; config: GameConfig }) => void;
