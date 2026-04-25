@@ -155,11 +155,11 @@ export function Home({ onCreateRoom, onJoinRoom, error }: HomeProps) {
       <div className="absolute inset-0 dot-grid pointer-events-none" />
 
       {/* Floating apples */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden floating-apple-layer">
         {floatingApples.map((a) => (
           <span
             key={a.id}
-            className="absolute bottom-[-10vh] text-2xl animate-float-up"
+            className="absolute bottom-[-10vh] text-2xl animate-float-up pointer-events-none"
             style={{
               left: `${a.left}%`,
               animationDuration: `${a.duration}s`,
